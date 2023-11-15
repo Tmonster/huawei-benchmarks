@@ -1,0 +1,13 @@
+
+
+python script should look like
+
+def run_query(query_num):
+    create_mem_pol_lock(query_num)
+    poll_mem(query_num)
+    run_query(query_num)
+    stop_polling_mem(query_num)
+
+
+
+def run_all_queries
