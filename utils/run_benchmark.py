@@ -27,8 +27,7 @@ def stop_polling_mem(query_file):
 def start_polling_mem(query_file):
     def run_script():
         try:
-            # If script_args is provided, include them; otherwise, pass an empty list
-            args = ['python3', '../utils/poll_memory.py', query_file.replace('.sql', 'mem_usage.csv')]
+            args = ['python3', 'utils/poll_memory.py', query_file.replace('.sql', '_mem_usage.csv'), query_file.replace('.sql', '_lock')]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
@@ -51,7 +50,6 @@ def get_query_from_file(file_name):
     except Exception as e:
         print(f"Error: {e}")
         return None
-
 
 
 def run_query(query_file):
@@ -100,7 +98,10 @@ def get_query_file_names():
     return file_list.sort()
 
 def run_all_queries():
-    all_query_files = get_query_file_names()..
+    all_query_files = get_query_file_names()
     for query_file in queries:
         profile_query_mem(query)
 
+
+if __name__ == "__main__":
+    run_all_queries()
