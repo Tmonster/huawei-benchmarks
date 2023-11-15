@@ -60,7 +60,7 @@ def poll_meminfo(mem_file, lock_file):
         parsed_mem_info = parse_memory_info(MEM_INFO_FILE)
 
         now = time.time()
-        log = str(now) + "," + get_csv_line(parsed_mem_info)
+        log = str(now) + "," + get_csv_line(parsed_mem_info) + "\n"
 
         with open(mem_file, 'a+') as file:
             file.write(log)
