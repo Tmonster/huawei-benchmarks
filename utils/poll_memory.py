@@ -2,6 +2,10 @@ import time
 import sys
 import os
 
+# MEM_INFO_FILE = "/proc/meminfo"
+MEM_INFO_FILE = "tmp_meminfo"
+
+
 def parse_memory_info(file_path):
     result = {}
 
@@ -46,14 +50,14 @@ def get_csv_line(parsed_mem_info):
 
 def poll_meminfo(mem_file, lock_file):
     # write the header
-    mem_info = list(parse_memory_info('tmp_meminfo').keys())
+    mem_info = list(parse_memory_info(MEM_INFO_FILE).keys())
     mem_info.sort()
     header = "time," + ",".join(mem_info) + "\n"
     with open(mem_file, 'a+') as file:
             file.write(header)
 
     while os.path.exists(lock_file):
-        parsed_mem_info = parse_memory_info('tmp_meminfo')
+        parsed_mem_info = parse_memory_info(MEM_INFO_FILE)
 
         now = time.time()
         log = str(now) + "," + get_csv_line(parsed_mem_info)

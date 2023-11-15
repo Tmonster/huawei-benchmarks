@@ -2,6 +2,7 @@ import os
 import duckdb
 import threading
 import subprocess
+import argparse
 
 QUERIES_DIR = "queries"
 TPCH_DATABASE = "tpch-sf100.duckdb"
@@ -27,10 +28,12 @@ def stop_polling_mem(query_file):
     except Exception as e:
         print(f"Error: {e}")
 
-def start_polling_mem(query_file):
+def start_polling_mem(query_file, system, benchmark_name):
     def run_script():
         try:
-            args = ['python3', 'utils/poll_memory.py', query_file.replace('.sql', '_mem_usage.csv'), query_file.replace('.sql', '_lock')]
+            mem_file = benchmark_name + query_file.replace('.sql', '_mem_usage.csv'),
+            mem_lock_file = query_file.replace('.sql', '_lock')
+            args = ['python3', 'utils/poll_memory.py', mem_file, mem_lock_file]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
@@ -76,10 +79,10 @@ def run_query(query_file):
     finally:
         connection.close()
 
-def profile_query_mem(query_file):
+def profile_query_mem(query_file, system, benchmark_name):
     create_mem_poll_lock(query_file)
-    start_polling_mem(query_file)
-    run_query(query_file)
+    start_polling_mem(query_file, system, benchmark_name)
+    run_query(query_file, system)
     stop_polling_mem(query_file)
 
 def get_query_file_names():
@@ -103,9 +106,34 @@ def get_query_file_names():
     return file_list
 
 def run_all_queries():
+    parser = argparse.ArgumentParser(description='Run tpch on hyper or duckdb')
+
+    # Add command-line arguments
+    parser.add_argument('--name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
+    parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
+
+    # Parse the command-line arguments
+    args = parser.parse_args()
+
+    # Access the values using dot notation (args.argument_name)
+    benchmark_name = "benchmarks/" + args.benchmark_name
+    system = args.system
+
+    if benchmark_name is None:
+        # create benchmark name
+        print("please pass benchmark name")
+        exit(1)
+
+
+    if os.path.isdir(benchmark_name):
+        print(f"benchmark {benchamrk_name} already exists!")
+        exit(1)
+    else:
+        os.makedirs(benchmark_name)
+
     all_query_files = get_query_file_names()
     for query_file in all_query_files:
-        profile_query_mem(query_file)
+        profile_query_mem(query_file, system, benchmark_name)
 
 
 if __name__ == "__main__":
