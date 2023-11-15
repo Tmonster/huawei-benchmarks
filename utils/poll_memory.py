@@ -1,4 +1,6 @@
 import time
+import sys
+import os
 
 def parse_memory_info(file_path):
     result = {}
@@ -10,12 +12,13 @@ def parse_memory_info(file_path):
                 parts = line.split()
                 
                 # Skip lines that don't have the expected format
-                if len(parts) != 2:
-                    continue
+                if len(parts) == 2:
+                    name, value = parts
+                if len(parts) == 3:
+                    name, value, kb = parts
+                    value = str(value) + str(kb)
                 
-                # Extract name and value
-                name, value = parts
-                
+                name = name.replace(":", "")
                 # Append to the result list
                 result[name] = value
     except FileNotFoundError:
@@ -32,7 +35,7 @@ def get_csv_line(parsed_mem_info):
 
         csv_string = f"{parsed_mem_info[sorted_keys[0]]},"
         # Convert the sorted values to a comma-separated string
-        for key in sorted_values[1:]:
+        for key in sorted_keys[1:]:
             csv_string += f",{parsed_mem_info[key]}"
 
         return csv_string
@@ -42,15 +45,15 @@ def get_csv_line(parsed_mem_info):
 
 
 def poll_meminfo(mem_file, lock_file):
-
     # write the header
-    mem_info = parse_memory_info('/proc/meminfo').keys().sorted()
-    header = "time," + mem_info.join(",")
+    mem_info = list(parse_memory_info('tmp_meminfo').keys())
+    mem_info.sort()
+    header = "time," + ",".join(mem_info) + "\n"
     with open(mem_file, 'a+') as file:
             file.write(header)
 
     while os.path.exists(lock_file):
-        parsed_mem_info = parse_memory_info('/proc/meminfo')
+        parsed_mem_info = parse_memory_info('tmp_meminfo')
 
         now = time.time()
         log = str(now) + "," + get_csv_line(parsed_mem_info)

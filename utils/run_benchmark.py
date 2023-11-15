@@ -1,5 +1,7 @@
 import os
 import duckdb
+import threading
+import subprocess
 
 QUERIES_DIR = "queries"
 TPCH_DATABASE = "tpch-sf100.duckdb"
@@ -17,6 +19,7 @@ def create_mem_poll_lock(query_file):
 def stop_polling_mem(query_file):
     try:
         # Remove the file
+        file_name = query_file.replace('.sql', '_lock')
         os.remove(file_name)
         print(f"File '{file_name}' removed successfully.")
     except FileNotFoundError:
@@ -37,6 +40,7 @@ def start_polling_mem(query_file):
     # Create a new thread and run the script inside it
     script_thread = threading.Thread(target=run_script)
     script_thread.start()
+    print("started polling /proc/meminfo")
 
 def get_query_from_file(file_name):
     try:
@@ -95,12 +99,13 @@ def get_query_file_names():
         # Handle the case where the directory does not exist
         print(f"Error: Directory '{directory_path}' not found.")
 
-    return file_list.sort()
+    file_list.sort()
+    return file_list
 
 def run_all_queries():
     all_query_files = get_query_file_names()
-    for query_file in queries:
-        profile_query_mem(query)
+    for query_file in all_query_files:
+        profile_query_mem(query_file)
 
 
 if __name__ == "__main__":
