@@ -31,7 +31,7 @@ def stop_polling_mem(query_file):
 def start_polling_mem(query_file, system, benchmark_name):
     def run_script():
         try:
-            mem_file = benchmark_name + query_file.replace('.sql', '_mem_usage.csv'),
+            mem_file = benchmark_name + "/" + query_file.replace('.sql', '_mem_usage.csv')
             mem_lock_file = query_file.replace('.sql', '_lock')
             args = ['python3', 'utils/poll_memory.py', mem_file, mem_lock_file]
             
@@ -59,7 +59,7 @@ def get_query_from_file(file_name):
         return None
 
 
-def run_query(query_file):
+def run_query(query_file, system):
     try:
         connection = duckdb.connect(TPCH_DATABASE)
 
@@ -73,7 +73,6 @@ def run_query(query_file):
 
         # Fetch and print the result
         result = cursor.fetchall()
-        print(result)
     except Exception as e:
         print(f"Error: {e}")
     finally:
@@ -109,15 +108,16 @@ def run_all_queries():
     parser = argparse.ArgumentParser(description='Run tpch on hyper or duckdb')
 
     # Add command-line arguments
-    parser.add_argument('--name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
+    parser.add_argument('--benchmark', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
     parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
 
     # Parse the command-line arguments
     args = parser.parse_args()
 
     # Access the values using dot notation (args.argument_name)
-    benchmark_name = "benchmarks/" + args.benchmark_name
+    benchmark_name = "benchmarks/" + args.benchmark
     system = args.system
+    syste = "duckdb"
 
     if benchmark_name is None:
         # create benchmark name
@@ -126,7 +126,7 @@ def run_all_queries():
 
 
     if os.path.isdir(benchmark_name):
-        print(f"benchmark {benchamrk_name} already exists!")
+        print(f"benchmark {benchmark_name} already exists!")
         exit(1)
     else:
         os.makedirs(benchmark_name)

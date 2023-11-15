@@ -69,6 +69,6 @@ def poll_meminfo(mem_file, lock_file):
         time.sleep(1)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 3:
         print("Usage: python poll_memory.py mem_file lock_file")
     poll_meminfo(sys.argv[1], sys.argv[2])
