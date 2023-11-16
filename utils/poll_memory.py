@@ -43,7 +43,7 @@ def get_csv_line(parsed_mem_info):
         # Convert the sorted values to a comma-separated string
         for key in known_keys:
             if key in parsed_mem_info:
-                csv_string += comma + f",{parsed_mem_info[key]}"
+                csv_string += comma + f"{parsed_mem_info[key]}"
             else:
                 csv_string += comma + comma
             comma = ","
