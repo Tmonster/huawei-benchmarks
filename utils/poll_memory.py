@@ -2,8 +2,8 @@ import time
 import sys
 import os
 
-# MEM_INFO_FILE = "/proc/meminfo"
-MEM_INFO_FILE = "tmp_meminfo"
+MEM_INFO_FILE = "/proc/meminfo"
+#MEM_INFO_FILE = "tmp_meminfo"
 
 known_keys = ['Active', 'Active(anon)', 'Active(file)', 'AnonHugePages', 'AnonPages', 'Bounce', 'Buffers', 'Cached', 'CommitLimit', 'Committed_AS', 'DirectMap1G', 'DirectMap2M', 'DirectMap4k', 'Dirty', 'FileHugePages', 'FilePmdMapped', 'HardwareCorrupted', 'HugePages_Free', 'HugePages_Rsvd', 'HugePages_Surp', 'HugePages_Total', 'Hugepagesize', 'Hugetlb', 'Inactive', 'Inactive(anon)', 'Inactive(file)', 'KReclaimable', 'KernelStack', 'Mapped', 'MemAvailable', 'MemFree', 'MemTotal', 'Mlocked', 'NFS_Unstable', 'PageTables', 'Percpu', 'SReclaimable', 'SUnreclaim', 'SecPageTables', 'Shmem', 'ShmemHugePages', 'ShmemPmdMapped', 'Slab', 'SwapCached', 'SwapFree', 'SwapTotal', 'Unevictable', 'VmallocChunk', 'VmallocTotal', 'VmallocUsed', 'Writeback', 'WritebackTmp', 'Zswap', 'Zswapped']
 
