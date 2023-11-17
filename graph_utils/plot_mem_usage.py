@@ -6,16 +6,19 @@ def plot_memory_data(benchmark_name):
     for i in range(22):
         query_num = i+1
         zfilled = 'q' + str(query_num).zfill(2)
-        df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_mem_usage.csv", index_col=False)
+        hyper_mem_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_hyper_mem_usage.csv", index_col=False)
+        duckdb_mem_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_duckdb_mem_usage.csv", index_col=False)
 
-        if len(df) < 6:
-            print(f"Query {query_num} ran for less than 5 seconds. Skipping plot")
+        if len(hyper_mem_df) < 6 && len(duckdb_mem_df) < 6:
+            print(f"Query {query_num} ran for less than 5 seconds on hyper and duckdb. Skipping plot")
             continue
 
-        df["normalized-time"] = df["Time"] - df["Time"].min()
+        hyper_mem_df["normalized-time"] = hyper_mem_df["Time"] - hyper_mem_df["Time"].min()
+        duckdb_mem_df["normalized-time"] = duckdb_mem_df["Time"] - duckdb_mem_df["Time"].min()
 
         plt.figure(figsize=(12, 6))
-        plt.plot(df['normalized-time'], ((df['MemTotal'] - df['MemAvailable']) / 1000000), label='MemUsed')
+        plt.plot(hyper_mem_df['normalized-time'], ((hyper_mem_df['MemTotal'] - hyper_mem_df['MemAvailable']) / 1000000), label='Hyper Memory')
+        plt.plot(duckdb_mem_df['normalized-time'], ((duckdb_mem_df['MemTotal'] - duckdb_mem_df['MemAvailable']) / 1000000), label='DuckDB Memory')
 
         # Set labels and title
         plt.xlabel('Time')
@@ -36,20 +39,3 @@ def plot_memory_data(benchmark_name):
 # Example usage:
 benchmark_name = "throw-away"
 plot_memory_data(benchmark_name)
-
-
-
- # Convert 'time' column to datetime format for better plotting
-    # df['Time'] = df['Time']
-
-    # fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(12,10))
-    # fig.suptitle('Memory usage over time', fontsize=16)
-
-    # for i, ax in enumerate(axes.flatten()):
-    #     mem_file_name = 'q' + str(i+10).zfill(2) + '_mem_usage.csv'
-    #     df = pd.read_csv(f"benchmarks/{benchmark_name}/{mem_file_name}", index_col=False)
-    #     df["MemUsed"] = ((df['MemTotal'] - df['MemFree']) / 1000000)
-    #     column_name = 'q' + str(i+1).zfill(2)
-    #     ax.set_xlim([df['Time'].min(), df['Time'].max()])
-    #     ax.set_ylim([0, 156])
-    #     ax.plot(df['Time'],  df["MemUsed"], label=column_name)

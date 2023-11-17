@@ -3,6 +3,11 @@ import duckdb
 import threading
 import subprocess
 import argparse
+from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
+
+SYSTEM_DIR = os.path.dirname(__file__)
+sys.path.append(f'{SYSTEM_DIR}/..')
+from util.util import *
 
 QUERIES_DIR = "queries"
 TPCH_DATABASE = "tpch-sf100.duckdb"
@@ -31,7 +36,7 @@ def stop_polling_mem(query_file):
 def start_polling_mem(query_file, system, benchmark_name):
     def run_script():
         try:
-            mem_file = benchmark_name + "/" + query_file.replace('.sql', '_mem_usage.csv')
+            mem_file = benchmark_name + "/" + query_file.replace('.sql', f"_{system}_mem_usage.csv")
             mem_lock_file = query_file.replace('.sql', '_lock')
             args = ['python3', 'utils/poll_memory.py', mem_file, mem_lock_file]
             
@@ -60,6 +65,18 @@ def get_query_from_file(file_name):
 
 
 def run_query(query_file, system):
+    if system == "duckdb":
+        run_duckdb_query(query_file)
+    elif system == "hyper":
+        run_hyper_query(query_file)
+    elif system == "all":
+        run_duckdb_query(query_file)
+        run_hyper_query(query_file)
+    else:
+        print("System must be hyper or duckdb")
+        exit(1)
+
+def run_duckdb_query(query_file):
     try:
         connection = duckdb.connect(TPCH_DATABASE)
 
@@ -77,6 +94,15 @@ def run_query(query_file, system):
         print(f"Error: {e}")
     finally:
         connection.close()
+
+def run_hyper_query(query_file):
+    hyper_path = f'{SYSTEM_DIR}/hyper/'
+    db_path = f"{SYSTEM_DIR}/hyper/mydb"
+    process_parameters = {"default_database_version": "2"}
+    query = get_query_from_file(f"queries/{query_file}")
+    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, hyper_path=hyper_path, parameters=process_parameters) as hyper:
+        with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
+            con.execute_query(query).close()
 
 def profile_query_mem(query_file, system, benchmark_name):
     create_mem_poll_lock(query_file)
