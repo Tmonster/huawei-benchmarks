@@ -91,17 +91,16 @@ def run_duckdb_query(query_file, benchmark_name):
     finally:
         connection.close()
 
-def run_hyper_query(query_file):
+def run_hyper_query(query_file, benchmark_name):
     db_path = f"hyper/mydb.hyper"
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"queries/{query_file}")
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
-            con.execute_query("""START TRANSACTION;""").close()
             start_polling_mem(query_file, "hyper", benchmark_name)
-            con.execute_query(query).close()
+            with con.execute_query(query) as results:
+                print(len(results))
             stop_polling_mem(query_file)
-            con.execute_query("""COMMIT;""").close()
 
 def profile_query_mem(query_file, systems, benchmark_name):
     for system in systems:

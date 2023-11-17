@@ -9,7 +9,7 @@ def plot_memory_data(benchmark_name):
         hyper_mem_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_hyper_mem_usage.csv", index_col=False)
         duckdb_mem_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_duckdb_mem_usage.csv", index_col=False)
 
-        if len(hyper_mem_df) < 6 && len(duckdb_mem_df) < 6:
+        if len(hyper_mem_df) < 6 and len(duckdb_mem_df) < 6:
             print(f"Query {query_num} ran for less than 5 seconds on hyper and duckdb. Skipping plot")
             continue
 
@@ -37,5 +37,5 @@ def plot_memory_data(benchmark_name):
     
 
 # Example usage:
-benchmark_name = "throw-away"
+benchmark_name = "sf100-right-semi"
 plot_memory_data(benchmark_name)
