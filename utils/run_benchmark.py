@@ -60,16 +60,16 @@ def get_query_from_file(file_name):
         return None
 
 
-def run_query(query_file, system):
+def run_query(query_file, system, benchmark_name):
     if system == "duckdb":
-        run_duckdb_query(query_file)
+        run_duckdb_query(query_file, benchmark_name)
     elif system == "hyper":
-        run_hyper_query(query_file)
+        run_hyper_query(query_file, benchmark_name)
     else:
         print("System must be hyper or duckdb")
         exit(1)
 
-def run_duckdb_query(query_file):
+def run_duckdb_query(query_file, benchmark_name):
     try:
         connection = duckdb.connect(TPCH_DATABASE)
 
@@ -77,11 +77,14 @@ def run_duckdb_query(query_file):
 
         # Create a cursor to execute SQL queries
         cursor = connection.cursor()
-
+        start_polling_mem(query_file, "duckdb", benchmark_name)
         # Execute the query
         cursor.execute(query)
+        
+        # stop polling memory
+        stop_polling_mem(query_file)
 
-        # Fetch and print the result
+        # Fetch the result
         result = cursor.fetchall()
     except Exception as e:
         print(f"Error: {e}")
@@ -92,18 +95,18 @@ def run_hyper_query(query_file):
     db_path = f"hyper/mydb.hyper"
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"queries/{query_file}")
-     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
+    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             con.execute_query("""START TRANSACTION;""").close()
+            start_polling_mem(query_file, "hyper", benchmark_name)
             con.execute_query(query).close()
+            stop_polling_mem(query_file)
             con.execute_query("""COMMIT;""").close()
 
 def profile_query_mem(query_file, systems, benchmark_name):
     for system in systems:
         create_mem_poll_lock(query_file)
-        start_polling_mem(query_file, system, benchmark_name)
-        run_query(query_file, system)
-        stop_polling_mem(query_file)
+        run_query(query_file, system, benchmark_name)
 
 def get_query_file_names():
     # Get the absolute path to the specified directory
