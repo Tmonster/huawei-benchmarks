@@ -6,12 +6,12 @@ def plot_memory_data(benchmark_name):
     for i in range(22):
         query_num = i+1
         zfilled = 'q' + str(query_num).zfill(2)
-        hyper_cold_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_hyper_{run}_mem.csv", index_col=False)
-        duckdb_cold_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_duckdb_{run}_mem.csv", index_col=False)
-        hyper_hot_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_hyper_{run}_mem.csv", index_col=False)
-        duckdb_hot_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_duckdb_{run}_mem.csv", index_col=False)
+        hyper_cold_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_hyper_cold_mem.csv", index_col=False)
+        duckdb_cold_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_duckdb_cold_mem.csv", index_col=False)
+        hyper_hot_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_hyper_hot_mem.csv", index_col=False)
+        duckdb_hot_df = pd.read_csv(f"benchmarks/{benchmark_name}/{zfilled}_duckdb_hot_mem.csv", index_col=False)
 
-        if len(hyper_mem_df) < 6 and len(duckdb_mem_df) < 6:
+        if len(hyper_cold_df) < 6 and len(duckdb_cold_df) < 6:
             print(f"Query {query_num} ran for less than 5 seconds on hyper and duckdb. Skipping plot")
             continue
 
@@ -43,5 +43,5 @@ def plot_memory_data(benchmark_name):
     
 
 # Example usage:
-benchmark_name = "sf100-right-semi"
+benchmark_name = "hotcoldtest"
 plot_memory_data(benchmark_name)
