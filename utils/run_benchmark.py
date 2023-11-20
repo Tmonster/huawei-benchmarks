@@ -29,10 +29,10 @@ def stop_polling_mem(query_file):
     except Exception as e:
         print(f"Error: {e}")
 
-def start_polling_mem(query_file, system, benchmark_name):
+def start_polling_mem(query_file, system, benchmark_name, run):
     def run_script():
         try:
-            mem_file = benchmark_name + "/" + query_file.replace('.sql', f"_{system}_mem_usage.csv")
+            mem_file = benchmark_name + "/" + query_file.replace('.sql', f"_{system}_{run}_mem.csv")
             mem_lock_file = query_file.replace('.sql', '_lock')
             args = ['python3', 'utils/poll_memory.py', mem_file, mem_lock_file]
             
@@ -62,45 +62,48 @@ def get_query_from_file(file_name):
 
 def run_query(query_file, system, benchmark_name):
     if system == "duckdb":
-        run_duckdb_query(query_file, benchmark_name)
+        run_duckdb_hot_cold(query_file, benchmark_name)
     elif system == "hyper":
-        run_hyper_query(query_file, benchmark_name)
+        run_hyper_hot_cold(query_file, benchmark_name)
     else:
         print("System must be hyper or duckdb")
         exit(1)
 
-def run_duckdb_query(query_file, benchmark_name):
-    try:
-        connection = duckdb.connect(TPCH_DATABASE)
+def run_duckdb_hot_cold(query_file, benchmark_name):
+    for run in ["cold", "hot"]:
+        try:
+            connection = duckdb.connect(TPCH_DATABASE)
 
-        query = get_query_from_file(f"queries/{query_file}")
+            query = get_query_from_file(f"queries/{query_file}")
 
-        # Create a cursor to execute SQL queries
-        cursor = connection.cursor()
-        start_polling_mem(query_file, "duckdb", benchmark_name)
-        # Execute the query
-        cursor.execute(query)
-        
-        # stop polling memory
-        stop_polling_mem(query_file)
+            # Create a cursor to execute SQL queries
+            cursor = connection.cursor()
+            start_polling_mem(query_file, "duckdb", benchmark_name, run)
+            # Execute the query
+            cursor.execute(query)
+            
+            # stop polling memory
+            stop_polling_mem(query_file)
 
-        # Fetch the result
-        result = cursor.fetchall()
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        connection.close()
+            # Fetch the result
+            result = cursor.fetchall()
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            connection.close()
 
-def run_hyper_query(query_file, benchmark_name):
+def run_hyper_hot_cold(query_file, benchmark_name):
+
     db_path = f"hyper/mydb.hyper"
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"queries/{query_file}")
-    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
-        with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
-            start_polling_mem(query_file, "hyper", benchmark_name)
-            with con.execute_query(query) as results:
-                print(len(results))
-            stop_polling_mem(query_file)
+    for run in ["cold", "hot"]:
+        with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
+            with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
+                start_polling_mem(query_file, "hyper", benchmark_name, run)
+                with con.execute_query(query) as results:
+                    print(len(results))
+                stop_polling_mem(query_file)
 
 def profile_query_mem(query_file, systems, benchmark_name):
     for system in systems:

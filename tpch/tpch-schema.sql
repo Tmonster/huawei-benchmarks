@@ -1,93 +1,95 @@
+DROP TABLE IF EXISTS PART CASCADE;
+CREATE TABLE PART (
 
-CREATE TABLE nation
-(
-    n_nationkey  INTEGER not null,
-    n_name       CHAR(25) not null,
-    n_regionkey  INTEGER not null,
-    n_comment    VARCHAR(152)
+    P_PARTKEY       SERIAL PRIMARY KEY,
+    P_NAME          VARCHAR(55),
+    P_MFGR          CHAR(25),
+    P_BRAND         CHAR(10),
+    P_TYPE          VARCHAR(25),
+    P_SIZE          INTEGER,
+    P_CONTAINER     CHAR(10),
+    P_RETAILPRICE   DECIMAL,
+    P_COMMENT       VARCHAR(23)
 );
 
-CREATE TABLE region
-(
-    r_regionkey  INTEGER not null,
-    r_name       CHAR(25) not null,
-    r_comment    VARCHAR(152)
+DROP TABLE IF EXISTS SUPPLIER CASCADE;
+CREATE TABLE SUPPLIER (
+    S_SUPPKEY       SERIAL PRIMARY KEY,
+    S_NAME          CHAR(25),
+    S_ADDRESS       VARCHAR(40),
+    S_NATIONKEY     BIGINT NOT NULL, -- references N_NATIONKEY
+    S_PHONE         CHAR(15),
+    S_ACCTBAL       DECIMAL,
+    S_COMMENT       VARCHAR(101)
 );
 
-CREATE TABLE part
-(
-    p_partkey     BIGINT not null,
-    p_name        VARCHAR(55) not null,
-    p_mfgr        CHAR(25) not null,
-    p_brand       CHAR(10) not null,
-    p_type        VARCHAR(25) not null,
-    p_size        INTEGER not null,
-    p_container   CHAR(10) not null,
-    p_retailprice DOUBLE PRECISION not null,
-    p_comment     VARCHAR(23) not null
+DROP TABLE IF EXISTS PARTSUPP CASCADE;
+CREATE TABLE PARTSUPP (
+    PS_PARTKEY      BIGINT NOT NULL, -- references P_PARTKEY
+    PS_SUPPKEY      BIGINT NOT NULL, -- references S_SUPPKEY
+    PS_AVAILQTY     INTEGER,
+    PS_SUPPLYCOST   DECIMAL,
+    PS_COMMENT      VARCHAR(199),
+    PRIMARY KEY (PS_PARTKEY, PS_SUPPKEY)
 );
 
-CREATE TABLE supplier
-(
-    s_suppkey     BIGINT not null,
-    s_name        CHAR(25) not null,
-    s_address     VARCHAR(40) not null,
-    s_nationkey   INTEGER not null,
-    s_phone       CHAR(15) not null,
-    s_acctbal     DOUBLE PRECISION not null,
-    s_comment     VARCHAR(101) not null
+DROP TABLE IF EXISTS CUSTOMER CASCADE;
+CREATE TABLE CUSTOMER (
+    C_CUSTKEY       SERIAL PRIMARY KEY,
+    C_NAME          VARCHAR(25),
+    C_ADDRESS       VARCHAR(40),
+    C_NATIONKEY     BIGINT NOT NULL, -- references N_NATIONKEY
+    C_PHONE         CHAR(15),
+    C_ACCTBAL       DECIMAL,
+    C_MKTSEGMENT    CHAR(10),
+    C_COMMENT       VARCHAR(117)
 );
 
-CREATE TABLE partsupp
-(
-    ps_partkey     BIGINT not null,
-    ps_suppkey     BIGINT not null,
-    ps_availqty    BIGINT not null,
-    ps_supplycost  DOUBLE PRECISION  not null,
-    ps_comment     VARCHAR(199) not null
+DROP TABLE IF EXISTS ORDERS CASCADE;
+CREATE TABLE ORDERS (
+    O_ORDERKEY      SERIAL PRIMARY KEY,
+    O_CUSTKEY       BIGINT NOT NULL, -- references C_CUSTKEY
+    O_ORDERSTATUS   CHAR(1),
+    O_TOTALPRICE    DECIMAL,
+    O_ORDERDATE     DATE,
+    O_ORDERPRIORITY CHAR(15),
+    O_CLERK         CHAR(15),
+    O_SHIPPRIORITY  INTEGER,
+    O_COMMENT       VARCHAR(79)
 );
 
-CREATE TABLE customer
-(
-    c_custkey     BIGINT not null,
-    c_name        VARCHAR(25) not null,
-    c_address     VARCHAR(40) not null,
-    c_nationkey   INTEGER not null,
-    c_phone       CHAR(15) not null,
-    c_acctbal     DOUBLE PRECISION   not null,
-    c_mktsegment  CHAR(10) not null,
-    c_comment     VARCHAR(117) not null
+DROP TABLE IF EXISTS LINEITEM CASCADE;
+CREATE TABLE LINEITEM (
+    L_ORDERKEY      BIGINT NOT NULL, -- references O_ORDERKEY
+    L_PARTKEY       BIGINT NOT NULL, -- references P_PARTKEY (compound fk to PARTSUPP)
+    L_SUPPKEY       BIGINT NOT NULL, -- references S_SUPPKEY (compound fk to PARTSUPP)
+    L_LINENUMBER    INTEGER,
+    L_QUANTITY      DECIMAL,
+    L_EXTENDEDPRICE DECIMAL,
+    L_DISCOUNT      DECIMAL,
+    L_TAX           DECIMAL,
+    L_RETURNFLAG    CHAR(1),
+    L_LINESTATUS    CHAR(1),
+    L_SHIPDATE      DATE,
+    L_COMMITDATE    DATE,
+    L_RECEIPTDATE   DATE,
+    L_SHIPINSTRUCT  CHAR(25),
+    L_SHIPMODE      CHAR(10),
+    L_COMMENT       VARCHAR(44),
+    PRIMARY KEY (L_ORDERKEY, L_LINENUMBER)
 );
 
-CREATE TABLE orders
-(
-    o_orderkey       BIGINT not null,
-    o_custkey        BIGINT not null,
-    o_orderstatus    CHAR(1) not null,
-    o_totalprice     DOUBLE PRECISION not null,
-    o_orderdate      DATE not null,
-    o_orderpriority  CHAR(15) not null,  
-    o_clerk          CHAR(15) not null, 
-    o_shippriority   INTEGER not null,
-    o_comment        VARCHAR(79) not null
+DROP TABLE IF EXISTS NATION CASCADE;
+CREATE TABLE NATION (
+    N_NATIONKEY     SERIAL PRIMARY KEY,
+    N_NAME          CHAR(25),
+    N_REGIONKEY     BIGINT NOT NULL,  -- references R_REGIONKEY
+    N_COMMENT       VARCHAR(152)
 );
 
-CREATE TABLE lineitem
-(
-    l_orderkey    BIGINT not null,
-    l_partkey     BIGINT not null,
-    l_suppkey     BIGINT not null,
-    l_linenumber  BIGINT not null,
-    l_quantity    DOUBLE PRECISION not null,
-    l_extendedprice  DOUBLE PRECISION not null,
-    l_discount    DOUBLE PRECISION not null,
-    l_tax         DOUBLE PRECISION not null,
-    l_returnflag  CHAR(1) not null,
-    l_linestatus  CHAR(1) not null,
-    l_shipdate    DATE not null,
-    l_commitdate  DATE not null,
-    l_receiptdate DATE not null,
-    l_shipinstruct CHAR(25) not null,
-    l_shipmode     CHAR(10) not null,
-    l_comment      VARCHAR(44) not null
+DROP TABLE IF EXISTS REGION CASCADE;
+CREATE TABLE REGION (
+    R_REGIONKEY SERIAL PRIMARY KEY,
+    R_NAME      CHAR(25),
+    R_COMMENT   VARCHAR(152)
 );
