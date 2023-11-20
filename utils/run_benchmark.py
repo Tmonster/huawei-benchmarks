@@ -41,6 +41,7 @@ def start_polling_mem(query_file, system, benchmark_name, run):
         except subprocess.CalledProcessError as e:
             print(f"Error running script: {e}")
 
+    create_mem_poll_lock(query_file)
     # Create a new thread and run the script inside it
     script_thread = threading.Thread(target=run_script)
     script_thread.start()
@@ -71,6 +72,7 @@ def run_query(query_file, system, benchmark_name):
 
 def run_duckdb_hot_cold(query_file, benchmark_name):
     for run in ["cold", "hot"]:
+        print(f"{run} run")
         try:
             connection = duckdb.connect(TPCH_DATABASE)
 
@@ -91,24 +93,29 @@ def run_duckdb_hot_cold(query_file, benchmark_name):
             print(f"Error: {e}")
         finally:
             connection.close()
+        print(f"done.")
+        time.sleep(5)
 
 def run_hyper_hot_cold(query_file, benchmark_name):
-
     db_path = f"hyper/mydb.hyper"
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"queries/{query_file}")
     for run in ["cold", "hot"]:
+        print(f"{run} run")
         with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
             with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
                 start_polling_mem(query_file, "hyper", benchmark_name, run)
                 with con.execute_query(query) as results:
                     print(len(results))
                 stop_polling_mem(query_file)
+        print(f"done.")
+        time.sleep(5)
 
 def profile_query_mem(query_file, systems, benchmark_name):
     for system in systems:
-        create_mem_poll_lock(query_file)
+        print(f"profiling memory for {system}")
         run_query(query_file, system, benchmark_name)
+        print(f"done. profiling memory for {system}")
 
 def get_query_file_names():
     # Get the absolute path to the specified directory
