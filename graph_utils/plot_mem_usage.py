@@ -1,5 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import argparse
+import os
 
 def plot_memory_data(benchmark_name):
     # Read CSV file into a pandas DataFrame
@@ -39,9 +41,23 @@ def plot_memory_data(benchmark_name):
         plt.savefig(f"benchmarks/{benchmark_name}/{zfilled}_plot")
         plt.clf()
 
-    # Plot MemAvailable, MemFree, and MemTotal values over time
-    
 
-# Example usage:
-benchmark_name = "hotcoldtest"
-plot_memory_data(benchmark_name)
+def plot_graphs():
+    parser = argparse.ArgumentParser(description='Plot memory usage of Tpch results over time')
+
+    parser.add_argument('--benchmark', type=str, help='Specify the benchmark name. Memory files are stored in this directory')
+
+    args = parser.parse_args()
+
+    benchmark_name = args.benchmark
+
+    if not os.path.isdir(benchmark_name):
+        print("Usage: python3 utils/plot_mem_usage.py --benchmark=[name]")
+
+    plot_memory_data(benchmark_name)
+
+
+if __name__ == "__main__":
+    plot_graphs()
+
+    

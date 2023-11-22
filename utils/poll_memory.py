@@ -3,7 +3,6 @@ import sys
 import os
 
 MEM_INFO_FILE = "/proc/meminfo"
-#MEM_INFO_FILE = "tmp_meminfo"
 
 known_keys = ['Active', 'Active(anon)', 'Active(file)', 'AnonHugePages', 'AnonPages', 'Bounce', 'Buffers', 'Cached', 'CommitLimit', 'Committed_AS', 'DirectMap1G', 'DirectMap2M', 'DirectMap4k', 'Dirty', 'FileHugePages', 'FilePmdMapped', 'HardwareCorrupted', 'HugePages_Free', 'HugePages_Rsvd', 'HugePages_Surp', 'HugePages_Total', 'Hugepagesize', 'Hugetlb', 'Inactive', 'Inactive(anon)', 'Inactive(file)', 'KReclaimable', 'KernelStack', 'Mapped', 'MemAvailable', 'MemFree', 'MemTotal', 'Mlocked', 'NFS_Unstable', 'PageTables', 'Percpu', 'SReclaimable', 'SUnreclaim', 'SecPageTables', 'Shmem', 'ShmemHugePages', 'ShmemPmdMapped', 'Slab', 'SwapCached', 'SwapFree', 'SwapTotal', 'Unevictable', 'VmallocChunk', 'VmallocTotal', 'VmallocUsed', 'Writeback', 'WritebackTmp', 'Zswap', 'Zswapped']
 
@@ -13,10 +12,8 @@ def parse_memory_info(file_path):
     try:
         with open(file_path, 'r') as file:
             for line in file:
-                # Split each line into name and value using whitespace as a separator
                 parts = line.split()
                 
-                # Skip lines that don't have the expected format
                 if len(parts) == 2:
                     name, value = parts
                 if len(parts) == 3:
@@ -71,8 +68,8 @@ def poll_meminfo(mem_file, lock_file):
         with open(mem_file, 'a+') as file:
             file.write(log)
 
-        # Wait for one second before polling again
-        time.sleep(1)
+        # Wait for 0.2 seconds before polling again
+        time.sleep(0.2)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

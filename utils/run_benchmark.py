@@ -10,6 +10,13 @@ from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 QUERIES_DIR = "queries"
 TPCH_DATABASE = "tpch-sf100.duckdb"
 
+
+def get_mem_lock_file(query_file):
+    return query_file.replace('.sql', '_lock')
+
+def get_mem_usage_file_name(benchmark_name, query_file, system, run):
+    return benchmark_name + "/" + query_file.replace('.sql', f"_{system}_{run}_mem.csv")
+
 def create_mem_poll_lock(query_file):
     file_name = query_file.replace('.sql', '_lock')
     try:
@@ -33,8 +40,8 @@ def stop_polling_mem(query_file):
 def start_polling_mem(query_file, system, benchmark_name, run):
     def run_script():
         try:
-            mem_file = benchmark_name + "/" + query_file.replace('.sql', f"_{system}_{run}_mem.csv")
-            mem_lock_file = query_file.replace('.sql', '_lock')
+            mem_file = get_mem_usage_file_name(benchmark_name, query_file, system, run)
+            mem_lock_file = get_mem_lock_file(query_file)
             args = ['python3', 'utils/poll_memory.py', mem_file, mem_lock_file]
             
             # Run the script using subprocess.Popen
@@ -150,7 +157,7 @@ def run_all_queries():
     # Access the values using dot notation (args.argument_name)
     benchmark_name = "benchmarks/" + args.benchmark
     if args.system not in ["hyper", "duckdb", "all"]:
-        print("Usage: python3 utils/run_benchmark.py --benchmark=(name) --sysmte=[duckdb|hyper|all]")
+        print("Usage: python3 utils/run_benchmark.py --benchmark=[name] --system=[duckdb|hyper|all]")
         exit(1)
 
     systems = [args.system]
@@ -162,9 +169,8 @@ def run_all_queries():
         print("please pass benchmark name")
         exit(1)
 
-
     if os.path.isdir(benchmark_name):
-        print(f"benchmark {benchmark_name} already exists!")
+        print(f"benchmark {benchmark_name} already exists. Try to think of another one")
         exit(1)
     else:
         os.makedirs(benchmark_name)
