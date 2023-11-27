@@ -53,7 +53,7 @@ def main():
 
             print("creating schema")
 
-            schema = get_query_from_file('../tpch/tpch-schema.sql')
+            schema = get_query_from_file('tpch/tpch-schema.sql')
             execute_multi_query(schema, con)
             # con.execute_query(schema)
 
@@ -73,14 +73,14 @@ def main():
             # can't read from external sources.
             print("copying data from parquet")
             con.execute_query("""START TRANSACTION;""").close()
-            con.execute_query(f"""Copy customer FROM '../../coiled-benchmarks/tpch-data/customer-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
-            con.execute_query(f"""Copy lineitem FROM '../../coiled-benchmarks/tpch-data/lineitem-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
-            con.execute_query(f"""Copy nation FROM '../../coiled-benchmarks/tpch-data/nation-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
-            con.execute_query(f"""Copy orders FROM '../../coiled-benchmarks/tpch-data/orders-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
-            con.execute_query(f"""Copy part FROM '../../coiled-benchmarks/tpch-data/part-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
-            con.execute_query(f"""Copy partsupp FROM '../../coiled-benchmarks/tpch-data/partsupp-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
-            con.execute_query(f"""Copy region FROM '../../coiled-benchmarks/tpch-data/region-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
-            con.execute_query(f"""Copy supplier FROM '../../coiled-benchmarks/tpch-data/supplier-sf-100.csv' WITH (FORMAT CSV, HEADER TRUE, QUOTE '"', DELIMITER ',');""").close()
+            con.execute_query(f"""Copy customer FROM 'tpch_data/customer-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy lineitem FROM 'tpch_data/lineitem-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy nation FROM 'tpch_data/nation-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy orders FROM 'tpch_data/orders-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy part FROM 'tpch_data/part-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy partsupp FROM 'tpch_data/partsupp-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy region FROM 'tpch_data/region-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy supplier FROM 'tpch_data/supplier-sf-100.csv' WITH (FORMAT PARQUET);""").close()
             con.execute_query("""COMMIT;""").close()
             
             # named constraint support not supported
