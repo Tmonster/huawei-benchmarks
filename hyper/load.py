@@ -28,7 +28,7 @@ def execute_multi_query(query, con):
 
 def main():
     hyper_path = f''
-    db_path = f"mydb.hyper"
+    db_path = f"tpch-sf100.hyper"
     process_parameters = {"default_database_version": "2"}
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
@@ -73,14 +73,14 @@ def main():
             # can't read from external sources.
             print("copying data from parquet")
             con.execute_query("""START TRANSACTION;""").close()
-            con.execute_query(f"""Copy customer FROM 'tpch_data/customer-sf-100.csv' WITH (FORMAT PARQUET);""").close()
-            con.execute_query(f"""Copy lineitem FROM 'tpch_data/lineitem-sf-100.csv' WITH (FORMAT PARQUET);""").close()
-            con.execute_query(f"""Copy nation FROM 'tpch_data/nation-sf-100.csv' WITH (FORMAT PARQUET);""").close()
-            con.execute_query(f"""Copy orders FROM 'tpch_data/orders-sf-100.csv' WITH (FORMAT PARQUET);""").close()
-            con.execute_query(f"""Copy part FROM 'tpch_data/part-sf-100.csv' WITH (FORMAT PARQUET);""").close()
-            con.execute_query(f"""Copy partsupp FROM 'tpch_data/partsupp-sf-100.csv' WITH (FORMAT PARQUET);""").close()
-            con.execute_query(f"""Copy region FROM 'tpch_data/region-sf-100.csv' WITH (FORMAT PARQUET);""").close()
-            con.execute_query(f"""Copy supplier FROM 'tpch_data/supplier-sf-100.csv' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy customer FROM 'tpch_data/customer-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy lineitem FROM 'tpch_data/lineitem-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy nation FROM 'tpch_data/nation-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy orders FROM 'tpch_data/orders-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy part FROM 'tpch_data/part-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy partsupp FROM 'tpch_data/partsupp-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy region FROM 'tpch_data/region-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
+            con.execute_query(f"""Copy supplier FROM 'tpch_data/supplier-sf-100.parquet' WITH (FORMAT PARQUET);""").close()
             con.execute_query("""COMMIT;""").close()
             
             # named constraint support not supported
