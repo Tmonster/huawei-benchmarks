@@ -1,37 +1,32 @@
-SELECT
+-- TPC-H Query 15
+
+with revenue as (
+    select
+        l_suppkey as supplier_no,
+        sum(l_extendedprice * (1 - l_discount)) as total_revenue
+    from
+        lineitem
+    where
+        l_shipdate >= date '1996-01-01'
+        and l_shipdate < date '1996-04-01'
+    group by
+        l_suppkey)
+select
     s_suppkey,
     s_name,
     s_address,
     s_phone,
     total_revenue
-FROM
+from
     supplier,
-    (
-        SELECT
-            l_suppkey AS supplier_no,
-            sum(l_extendedprice * (1 - l_discount)) AS total_revenue
-        FROM
-            lineitem
-        WHERE
-            l_shipdate >= CAST('1996-01-01' AS date)
-            AND l_shipdate < CAST('1996-04-01' AS date)
-        GROUP BY
-            supplier_no) revenue0
-WHERE
+    revenue
+where
     s_suppkey = supplier_no
-    AND total_revenue = (
-        SELECT
+    and total_revenue = (
+        select
             max(total_revenue)
-        FROM (
-            SELECT
-                l_suppkey AS supplier_no,
-                sum(l_extendedprice * (1 - l_discount)) AS total_revenue
-            FROM
-                lineitem
-            WHERE
-                l_shipdate >= CAST('1996-01-01' AS date)
-                AND l_shipdate < CAST('1996-04-01' AS date)
-            GROUP BY
-                supplier_no) revenue1)
-ORDER BY
-    s_suppkey;
+        from
+            revenue
+    )
+order by
+    s_suppkey

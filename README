@@ -1,13 +1,12 @@
+# Overview
+
+Benchmark repo to keep track of progress on memory pressure. 
+
+## to run the queries and measure memory pressure
+
+python3 utils/run_benchmark.py --benchmark={benchmark_name} --system=all
 
 
-python script should look like
+## to plot summary
 
-def run_query(query_num):
-    create_mem_pol_lock(query_num)
-    poll_mem(query_num)
-    run_query(query_num)
-    stop_polling_mem(query_num)
-
-
-
-def run_all_queries
+Rscript graph_utils/plot_summary.R {benchmark_name}

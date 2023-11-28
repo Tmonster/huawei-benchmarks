@@ -104,7 +104,7 @@ def run_duckdb_hot_cold(query_file, benchmark_name):
         time.sleep(5)
 
 def run_hyper_hot_cold(query_file, benchmark_name):
-    db_path = f"hyper/mydb.hyper"
+    db_path = f"tpch-sf100.hyper"
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"queries/{query_file}")
     for run in ["cold", "hot"]:
