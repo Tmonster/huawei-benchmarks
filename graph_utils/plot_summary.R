@@ -41,7 +41,7 @@ results <- dbGetQuery(con, "FROM results_x_y")
 ggplot(results, aes(x=time, y=MemUsed, col=system)) +
   geom_line() +
   facet_wrap(~query, ncol=5, scales="free_x") +
-  ylim(0,24) + 
+  ylim(0,NA) + 
   xlab("time [s]") +
   ylab("Memory Used [GB]") +
   theme_bw()
