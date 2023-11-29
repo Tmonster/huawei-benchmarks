@@ -22,7 +22,13 @@ Then you can create the data with the following commands
 
 ## Running the benchmark
 Give the benchmark a name. The name defines a directory in the benchmarks directory where the data is stored.
+If you are running the benchmark on AWS, see if you can use instance storage to reduce variability introduced by EBS. This can be done by running the command below
+```
+./utils/format_and_mount.sh
+```
+This will format and mount a copy of the benchmarks at `~/memory-pressure-benchmarks-metal` on instance storage. Change into this directory when running the benchmarks
 
+To run the benchmark
 ```
 python3 utils/run_benchmark.py --benchmark={benchmark_name} --system=all
 ```
