@@ -7,15 +7,15 @@ import time
 from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 
 
-QUERIES_DIR = "queries"
 TPCH_DATABASE = "tpch-sf100.duckdb"
+HYPER_DATABASE = "hyper-sf100.hyper"
 
 
 def get_mem_lock_file(query_file):
     return query_file.replace('.sql', '_lock')
 
-def get_mem_usage_file_name(benchmark_name, query_file, system, run):
-    return benchmark_name + "/" + query_file.replace('.sql', f"_{system}_{run}_mem.csv")
+def get_mem_usage_file_name(benchmark_name, benchmark, query_file, system, run):
+    return benchmark_name + "/" + benchmark + "/" + query_file.replace('.sql', f"_{system}_{run}_mem.csv")
 
 def create_mem_poll_lock(query_file):
     file_name = query_file.replace('.sql', '_lock')
@@ -37,10 +37,10 @@ def stop_polling_mem(query_file):
     except Exception as e:
         print(f"Error: {e}")
 
-def start_polling_mem(query_file, system, benchmark_name, run):
+def start_polling_mem(query_file, system, benchmark_name, benchmark, run):
     def run_script():
         try:
-            mem_file = get_mem_usage_file_name(benchmark_name, query_file, system, run)
+            mem_file = get_mem_usage_file_name(benchmark_name, benchmark, query_file, system, run)
             mem_lock_file = get_mem_lock_file(query_file)
             args = ['python3', 'utils/poll_memory.py', mem_file, mem_lock_file]
             
@@ -68,16 +68,16 @@ def get_query_from_file(file_name):
         return None
 
 
-def run_query(query_file, system, benchmark_name):
+def run_query(query_file, system, benchmark_name, benchmark):
     if system == "duckdb":
-        run_duckdb_hot_cold(query_file, benchmark_name)
+        run_duckdb_hot_cold(query_file, benchmark_name, benchmark)
     elif system == "hyper":
-        run_hyper_hot_cold(query_file, benchmark_name)
+        run_hyper_hot_cold(query_file, benchmark_name, benchmark)
     else:
         print("System must be hyper or duckdb")
         exit(1)
 
-def run_duckdb_hot_cold(query_file, benchmark_name):
+def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
     for run in ["cold", "hot"]:
         print(f"{run} run")
         try:
@@ -87,7 +87,7 @@ def run_duckdb_hot_cold(query_file, benchmark_name):
 
             # Create a cursor to execute SQL queries
             cursor = connection.cursor()
-            start_polling_mem(query_file, "duckdb", benchmark_name, run)
+            start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run)
             # Execute the query
             cursor.execute(query)
             
@@ -103,15 +103,15 @@ def run_duckdb_hot_cold(query_file, benchmark_name):
         print(f"done.")
         time.sleep(5)
 
-def run_hyper_hot_cold(query_file, benchmark_name):
-    db_path = f"tpch-sf100.hyper"
+def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
+    db_path = f"{HYPER_DATABASE}"
     process_parameters = {"default_database_version": "2"}
-    query = get_query_from_file(f"queries/{query_file}")
+    query = get_query_from_file(f"{benchmark}/{query_file}")
     for run in ["cold", "hot"]:
         print(f"{run} run")
         with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
             with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
-                start_polling_mem(query_file, "hyper", benchmark_name, run)
+                start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
                 with con.execute_query(query) as results:
                     rows = list(results)
                 stop_polling_mem(query_file)
@@ -121,12 +121,12 @@ def run_hyper_hot_cold(query_file, benchmark_name):
 def profile_query_mem(query_file, systems, benchmark_name):
     for system in systems:
         print(f"profiling memory for {system}. query {query_file}")
-        run_query(query_file, system, benchmark_name)
+        run_query(query_file, system, benchmark_name, benchmark)
         print(f"done profiling")
 
-def get_query_file_names():
+def get_query_file_names(benchmark):
     # Get the absolute path to the specified directory
-    directory_path = os.path.abspath(QUERIES_DIR)
+    directory_path = os.path.abspath(benchmark)
 
     # Initialize an empty list to store file names
     file_list = []
@@ -148,14 +148,17 @@ def run_all_queries():
     parser = argparse.ArgumentParser(description='Run tpch on hyper or duckdb')
 
     # Add command-line arguments
-    parser.add_argument('--benchmark', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
+    parser.add_argument('--benchmark_name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
+    parser.add_argument('--benchmark', type=str, help='Which benchmark to run. \'all\', \'tpch\', or \'operators\'')
     parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
 
     # Parse the command-line arguments
     args = parser.parse_args()
 
+    benchmark = arge.benchmark
+
     # Access the values using dot notation (args.argument_name)
-    benchmark_name = "benchmarks/" + args.benchmark
+    benchmark_name = "benchmarks/" + args.benchmark_name
     if args.system not in ["hyper", "duckdb", "all"]:
         print("Usage: python3 utils/run_benchmark.py --benchmark=[name] --system=[duckdb|hyper|all]")
         exit(1)
@@ -175,7 +178,7 @@ def run_all_queries():
     else:
         os.makedirs(benchmark_name)
 
-    all_query_files = get_query_file_names()
+    all_query_files = get_query_file_names(benchmark)
     for query_file in all_query_files:
         profile_query_mem(query_file, systems, benchmark_name)
 
