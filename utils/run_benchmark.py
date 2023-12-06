@@ -4,6 +4,7 @@ import threading
 import subprocess
 import argparse
 import time
+import duckdb
 from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 
 
@@ -14,7 +15,7 @@ HYPER_DATABASE = "hyper-sf100.hyper"
 def get_mem_lock_file(query_file):
     return query_file.replace('.sql', '_lock')
 
-def get_mem_usage_file_name(benchmark_name, benchmark, query_file, system, run):
+def get_mem_usage_db_file(benchmark_name, benchmark):
     return benchmark_name + "/" + benchmark + "/" + query_file.replace('.sql', f"_{system}_{run}_mem.csv")
 
 def create_mem_poll_lock(query_file):
@@ -40,9 +41,16 @@ def stop_polling_mem(query_file):
 def start_polling_mem(query_file, system, benchmark_name, benchmark, run):
     def run_script():
         try:
-            mem_file = get_mem_usage_file_name(benchmark_name, benchmark, query_file, system, run)
+            mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
+
+            # create table if it doesn't exist
+            if not os.path.exists(mem_db):
+                con = duckdb.connect(mem_db)
+                con.sql(".read 'utils/data_schema.sql")
+
+            query = query_file.replace('.sql', '')
             mem_lock_file = get_mem_lock_file(query_file)
-            args = ['python3', 'utils/poll_memory.py', mem_file, mem_lock_file]
+            args = ['python3', 'utils/poll_memory.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
