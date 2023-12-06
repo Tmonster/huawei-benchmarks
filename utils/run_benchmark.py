@@ -16,7 +16,7 @@ def get_mem_lock_file(query_file):
     return query_file.replace('.sql', '_lock')
 
 def get_mem_usage_db_file(benchmark_name, benchmark):
-    return benchmark_name + "/" + benchmark + "/" + query_file.replace('.sql', f"_{system}_{run}_mem.csv")
+    return benchmark_name + "/" + benchmark + "/data.duckdb"
 
 def create_mem_poll_lock(query_file):
     file_name = query_file.replace('.sql', '_lock')
@@ -43,10 +43,15 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run):
         try:
             mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
 
-            # create table if it doesn't exist
+            if not os.path.exists(benchmark_name + "/" + benchmark):
+                os.makedirs(f"{benchmark_name}/{benchmark}")
+
+            # create db if it does not yet exist.
             if not os.path.exists(mem_db):
                 con = duckdb.connect(mem_db)
-                con.sql(".read 'utils/data_schema.sql")
+                with open('utils/data_schema.sql') as f: schema = f.read()
+                con.sql(f"{schema}")
+                con.close()
 
             query = query_file.replace('.sql', '')
             mem_lock_file = get_mem_lock_file(query_file)
@@ -134,7 +139,7 @@ def profile_query_mem(query_file, systems, benchmark_name, benchmark):
 
 def get_query_file_names(benchmark):
     # Get the absolute path to the specified directory
-    directory_path = os.path.abspath("./benchmark-queries/{benchmark}-queries/")
+    directory_path = os.path.abspath(f"./benchmark-queries/{benchmark}-queries/")
 
     # Initialize an empty list to store file names
     file_list = []
@@ -163,14 +168,14 @@ def run_all_queries():
     # Parse the command-line arguments
     args = parser.parse_args()
 
-    benchmarks = args.benchmark
-    benchmarks = ['tpch']
-
     # Access the values using dot notation (args.argument_name)
     benchmark_name = "benchmarks/" + args.benchmark_name
     if args.system not in ["hyper", "duckdb", "all"]:
         print("Usage: python3 utils/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
         exit(1)
+
+    benchmarks = args.benchmark
+    benchmarks = ['join']
 
     systems = [args.system]
     if systems[0] == "all":
@@ -189,6 +194,8 @@ def run_all_queries():
 
     for benchmark in benchmarks:
         query_file_names = get_query_file_names(benchmark)
+        import pdb
+        pdb.set_trace()
         for query_file in query_file_names:
             profile_query_mem(query_file, systems, benchmark_name, benchmark)
 

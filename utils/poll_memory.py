@@ -83,5 +83,5 @@ if __name__ == "__main__":
     system = sys.argv[5]
     run = sys.argv[6]
     query = sys.argv[7]
-    poll_meminfo(data_db, lock_file, benchmark_name, benchmark, system, run, query)
+    poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, run, query)
 
