@@ -83,7 +83,7 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
         try:
             connection = duckdb.connect(TPCH_DATABASE)
 
-            query = get_query_from_file(f"queries/{query_file}")
+            query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
 
             # Create a cursor to execute SQL queries
             cursor = connection.cursor()
@@ -118,7 +118,7 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
         print(f"done.")
         time.sleep(5)
 
-def profile_query_mem(query_file, systems, benchmark_name):
+def profile_query_mem(query_file, systems, benchmark_name, benchmark):
     for system in systems:
         print(f"profiling memory for {system}. query {query_file}")
         run_query(query_file, system, benchmark_name, benchmark)
@@ -126,7 +126,7 @@ def profile_query_mem(query_file, systems, benchmark_name):
 
 def get_query_file_names(benchmark):
     # Get the absolute path to the specified directory
-    directory_path = os.path.abspath(benchmark)
+    directory_path = os.path.abspath("./benchmark-queries/{benchmark}-queries/")
 
     # Initialize an empty list to store file names
     file_list = []
@@ -149,18 +149,19 @@ def run_all_queries():
 
     # Add command-line arguments
     parser.add_argument('--benchmark_name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
-    parser.add_argument('--benchmark', type=str, help='Which benchmark to run. \'all\', \'tpch\', or \'operators\'')
+    parser.add_argument('--benchmark', type=str, help='list of benchmarks to run. \'all\', \'tpch\', etc.')
     parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
 
     # Parse the command-line arguments
     args = parser.parse_args()
 
-    benchmark = arge.benchmark
+    benchmarks = args.benchmark
+    benchmarks = ['tpch']
 
     # Access the values using dot notation (args.argument_name)
     benchmark_name = "benchmarks/" + args.benchmark_name
     if args.system not in ["hyper", "duckdb", "all"]:
-        print("Usage: python3 utils/run_benchmark.py --benchmark=[name] --system=[duckdb|hyper|all]")
+        print("Usage: python3 utils/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
         exit(1)
 
     systems = [args.system]
@@ -173,14 +174,15 @@ def run_all_queries():
         exit(1)
 
     if os.path.isdir(benchmark_name):
-        print(f"benchmark {benchmark_name} already exists. Try to think of another one")
+        print(f"benchmark {benchmark_name} already exists.")
         exit(1)
     else:
         os.makedirs(benchmark_name)
 
-    all_query_files = get_query_file_names(benchmark)
-    for query_file in all_query_files:
-        profile_query_mem(query_file, systems, benchmark_name)
+    for benchmark in benchmarks:
+        query_file_names = get_query_file_names(benchmark)
+        for query_file in query_file_names:
+            profile_query_mem(query_file, systems, benchmark_name, benchmark)
 
 
 if __name__ == "__main__":
