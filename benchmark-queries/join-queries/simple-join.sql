@@ -1,1 +1,1 @@
-select * from orders, customer where o_custkey = c_custkey;
+create or replace table simple_join as select * from orders, customer where o_custkey = c_custkey and c_custkey < 10000000;

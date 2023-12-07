@@ -95,25 +95,25 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
     for run in ["cold", "hot"]:
         print(f"{run} run")
         try:
-            connection = duckdb.connect(TPCH_DATABASE)
+            con = duckdb.connect(TPCH_DATABASE)
 
             query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
 
             # Create a cursor to execute SQL queries
-            cursor = connection.cursor()
             start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run)
             # Execute the query
-            cursor.execute(query)
-            
+            con.sql(query)
+
             # stop polling memory
             stop_polling_mem(query_file)
 
             # Fetch the result
-            result = cursor.fetchall()
+            if benchmark not in ['join']:
+                result = con.fetchone()
         except Exception as e:
             print(f"Error: {e}")
         finally:
-            connection.close()
+            con.close()
         print(f"done.")
         time.sleep(5)
 
@@ -202,7 +202,7 @@ def run_all_queries():
         mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
         con = duckdb.connect(mem_db)
         csv_result_file = f"{benchmark_name}/{benchmark}-results"
-        con.execute_query("copy time_info to '{csv_result_file}.csv' (FORMAT CSV, HEADER 1)")
+        con.execute_query(f"copy time_info to '{csv_result_file}.csv' (FORMAT CSV, HEADER 1)")
         # os.remove(mem_db)
         con.close()
 
