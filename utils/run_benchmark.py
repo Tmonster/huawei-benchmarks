@@ -9,7 +9,7 @@ from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 
 
 TPCH_DATABASE = "tpch-sf100.duckdb"
-HYPER_DATABASE = "hyper-sf100.hyper"
+HYPER_DATABASE = "tpch-sf100.hyper"
 
 
 def get_mem_lock_file(query_file):
@@ -126,8 +126,7 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
         with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
             with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
                 start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
-                with con.execute_query(query) as results:
-                    rows = list(results)
+                res = con.execute_command(query)
                 stop_polling_mem(query_file)
         print(f"done.")
         time.sleep(5)
