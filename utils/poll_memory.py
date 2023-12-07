@@ -38,20 +38,27 @@ def get_csv_line(parsed_mem_info):
         sorted_keys = sorted(parsed_mem_info.keys())
 
         csv_string = ""
-        comma = ""
-        # Convert the sorted values to a comma-separated string
+        separator = ""
+        # Convert the sorted values to some separated thing
         for key in known_keys:
             if key in parsed_mem_info:
-                csv_string += comma + f"{parsed_mem_info[key]}"
+                csv_string += separator + f"'{parsed_mem_info[key]}'"
             else:
-                csv_string += comma + comma
-            comma = ","
+                csv_string += separator + separator
+            separator = ","
 
         return csv_string
     except Exception as e:
         print(f"Error: {e}")
         return None
 
+def get_query_specific_values(benchmark_name, benchmark, system, run, query):
+    benchmark_name_quoted = f"\'{benchmark_name}'"
+    benchmark_quoted = f"'{benchmark}'"
+    system_quoted = f"'{system}'"
+    run_quoted = f"'{run}'"
+    query_quoted = f"'{query}'"
+    return ",".join([benchmark_name_quoted, benchmark_quoted, system_quoted, run_quoted, query_quoted])
 
 
 def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, run, query):
@@ -59,11 +66,12 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
 
     con = duckdb.connect(data_db)
 
+    benchmark_identifiers = get_query_specific_values(benchmark_name, benchmark, system, run, query)
     while os.path.exists(lock_file):
         parsed_mem_info = parse_memory_info(MEM_INFO_FILE)
 
         now = time.time()
-        log = ",".join([benchmark_name, benchmark, system, run, query, str(now)]) + "," + get_csv_line(parsed_mem_info) + "\n"
+        log = benchmark_identifiers + "," + str(now) + "," + get_csv_line(parsed_mem_info) + "\n"
         con.sql(f"INSERT INTO time_info VALUES ({log})")
 
         # Wait for 0.2 seconds before polling again
@@ -73,8 +81,8 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python poll_memory.py data_db lock_file")
+    if len(sys.argv) != 8:
+        print("Usage: python poll_memory.py data_db lock_file benchark_name benchmark system run query")
 
     data_db = sys.argv[1]
     lock_file = sys.argv[2]

@@ -22,8 +22,9 @@ def create_mem_poll_lock(query_file):
     file_name = query_file.replace('.sql', '_lock')
     try:
         # Open the file in write mode, creating it if it doesn't exist
+        # it is a lock file so we don't do anything once the file is created.
         with open(file_name, 'w'):
-            pass  # No need to do anything inside the block, just want to create the file
+            pass
         return
     except Exception as e:
         print(f"Error: {e}")
@@ -194,10 +195,17 @@ def run_all_queries():
 
     for benchmark in benchmarks:
         query_file_names = get_query_file_names(benchmark)
-        import pdb
-        pdb.set_trace()
         for query_file in query_file_names:
             profile_query_mem(query_file, systems, benchmark_name, benchmark)
+
+        # write the duckdb to csv 
+        mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
+        con = duckdb.connect(mem_db)
+        csv_result_file = f"{benchmark_name}/{benchmark}-results"
+        con.execute_query("copy time_info to '{csv_result_file}.csv' (FORMAT CSV, HEADER 1)")
+        # os.remove(mem_db)
+        con.close()
+
 
 
 if __name__ == "__main__":
