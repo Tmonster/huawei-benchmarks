@@ -104,12 +104,12 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
             # Execute the query
             con.sql(query)
 
+            if benchmark not in ['join']:
+                result = con.fetchall()
+
             # stop polling memory
             stop_polling_mem(query_file)
-
-            # Fetch the result
-            if benchmark not in ['join']:
-                result = con.fetchone()
+            
         except Exception as e:
             print(f"Error: {e}")
         finally:
