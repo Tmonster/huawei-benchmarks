@@ -105,6 +105,7 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
             con.sql(query).execute()
             # stop polling memory
             stop_polling_mem(query_file)
+            time.sleep(4)
         
     except Exception as e:
         print(f"Error: {e}")
