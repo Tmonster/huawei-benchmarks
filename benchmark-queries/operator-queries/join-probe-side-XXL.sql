@@ -1,1 +1,0 @@
-select * from customer, nation where n_nationkey = c_nationkey;

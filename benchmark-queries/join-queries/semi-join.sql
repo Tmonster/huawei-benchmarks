@@ -1,0 +1,1 @@
+select * from partsupp where ps_partkey in (select p_partkey from part);

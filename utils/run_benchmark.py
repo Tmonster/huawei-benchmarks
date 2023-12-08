@@ -125,6 +125,7 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
                 start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
+                time.sleep(4)
     print(f"done.")
     time.sleep(5)
 
@@ -173,7 +174,7 @@ def run_all_queries():
 
     benchmarks = [args.benchmark]
     if args.benchmark == 'all':
-        benchmarks = ['tpch', 'operator-queries']
+        benchmarks = ['tpch', 'operator']
 
 
     systems = [args.system]
