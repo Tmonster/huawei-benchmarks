@@ -186,19 +186,26 @@ def run_all_queries():
         print("please pass benchmark name")
         exit(1)
 
+    overwrite = False
     if os.path.isdir(benchmark_name):
-        print(f"benchmark {benchmark_name} already exists.")
+        print(f"benchmark {benchmark_name} already exists. Going to overwrite")
+        overwrite = True
         exit(1)
     else:
         os.makedirs(benchmark_name)
 
     for benchmark in benchmarks:
         query_file_names = get_query_file_names(benchmark)
+        
+        mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
+        if overwrite and os.file.exists(mem_db):
+            os.remove(mem_db)
+
         for query_file in query_file_names:
             profile_query_mem(query_file, systems, benchmark_name, benchmark)
 
         # write the duckdb to csv 
-        mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
+        
         con = duckdb.connect(mem_db)
         csv_result_file = f"{benchmark_name}/{benchmark}-results"
         con.sql(f"copy time_info to '{csv_result_file}.csv' (FORMAT CSV, HEADER 1)")
