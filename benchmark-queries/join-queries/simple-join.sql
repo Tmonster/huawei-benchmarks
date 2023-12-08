@@ -1,1 +1,0 @@
-select * from orders, customer where o_custkey = c_custkey and c_custkey < 1000000;

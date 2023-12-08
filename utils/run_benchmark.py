@@ -92,44 +92,40 @@ def run_query(query_file, system, benchmark_name, benchmark):
         exit(1)
 
 def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
-    for run in ["cold", "hot"]:
-        print(f"{run} run")
-        try:
-            con = duckdb.connect(TPCH_DATABASE)
+    try:
+        con = duckdb.connect(TPCH_DATABASE)
 
-            query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
+        query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
 
+        for run in ["cold", "hot"]:
+            print(f"{run} run")
             # Create a cursor to execute SQL queries
             start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run)
             # Execute the query
-            con.sql(query)
-
-            if benchmark not in ['join']:
-                result = con.fetchall()
-
+            con.sql(query).execute()
             # stop polling memory
             stop_polling_mem(query_file)
-            
-        except Exception as e:
-            print(f"Error: {e}")
-        finally:
-            con.close()
-        print(f"done.")
-        time.sleep(5)
+        
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        con.close()
+    print(f"done.")
+    time.sleep(5)
 
 def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
     db_path = f"{HYPER_DATABASE}"
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
-    for run in ["cold", "hot"]:
-        print(f"{run} run")
-        with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
-            with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
+    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
+        with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
+            for run in ["cold", "hot"]:
+                print(f"{run} run")
                 start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
-        print(f"done.")
-        time.sleep(5)
+    print(f"done.")
+    time.sleep(5)
 
 def profile_query_mem(query_file, systems, benchmark_name, benchmark):
     for system in systems:
@@ -174,8 +170,10 @@ def run_all_queries():
         print("Usage: python3 utils/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
         exit(1)
 
-    benchmarks = args.benchmark
-    benchmarks = ['join']
+    benchmarks = [args.benchmark]
+    if args.benchmark == 'all':
+        benchmarks = ['tpch', 'operator-queries']
+
 
     systems = [args.system]
     if systems[0] == "all":
