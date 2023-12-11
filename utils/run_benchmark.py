@@ -11,7 +11,7 @@ from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 TPCH_DATABASE = "tpch-sf100.duckdb"
 HYPER_DATABASE = "tpch-sf100.hyper"
 
-DROP_ANSWER_SQL = "Drop table ans if exists;"
+DROP_ANSWER_SQL = "Drop table if exists ans;"
 
 HYPER_FAILING_OPERATOR_QUERIES = ['l_orderkey-l_partkey.sql', 'l_orderkey-l_suppkey.sql', 'l_suppkey-l_partkey-l_orderkey.sql', 'l_suppkey-l_partkey-l_shipinstruct.sql']
 
