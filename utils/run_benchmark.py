@@ -95,6 +95,8 @@ def run_query(query_file, system, benchmark_name, benchmark):
         exit(1)
 
 def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
+    if query_file in HYPER_FAILING_OPERATOR_QUERIES:
+        print(f"hyper fails, skipping query for duckdb as well")
     try:
         con = duckdb.connect(TPCH_DATABASE)
 
