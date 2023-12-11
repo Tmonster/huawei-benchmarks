@@ -13,13 +13,14 @@ HYPER_DATABASE = "tpch-sf100.hyper"
 
 DROP_ANSWER_SQL = "Drop table if exists ans;"
 
-HYPER_FAILING_OPERATOR_QUERIES = ['l_orderkey-l_partkey.sql',
-'l_orderkey-l_suppkey.sql',
-'l_suppkey-l_partkey-l_orderkey.sql',
-'l_suppkey-l_partkey-l_shipinstruct.sql',
-'l_suppkey-l_partkey-l_returnflag-l_linestatus.sql',
-'l_suppkey-l_partkey-l_shipinstruct-l_shipmode.sql',
-'l_suppkey-l_partkey-l_shipmode.sql',
+HYPER_FAILING_OPERATOR_QUERIES = [
+'aggr-l_orderkey-l_partkey.sql',
+'aggr-l_orderkey-l_suppkey.sql',
+'aggr-l_suppkey-l_partkey-l_orderkey.sql',
+'aggr-l_suppkey-l_partkey-l_shipinstruct.sql',
+'aggr-l_suppkey-l_partkey-l_returnflag-l_linestatus.sql',
+'aggr-l_suppkey-l_partkey-l_shipinstruct-l_shipmode.sql',
+'aggr-l_suppkey-l_partkey-l_shipmode.sql',
 'hash-join-large.sql'
 ]
 
