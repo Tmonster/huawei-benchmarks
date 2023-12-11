@@ -72,7 +72,7 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
 
         now = time.time()
         log = benchmark_identifiers + "," + str(now) + "," + get_csv_line(parsed_mem_info) + "\n"
-        con.sql(f"INSERT INTO time_info VALUES ({log})").execute()
+        con.sql(f"INSERT INTO time_info VALUES ({log})")
 
         # Wait for 0.2 seconds before polling again
         time.sleep(0.2)
