@@ -13,7 +13,15 @@ HYPER_DATABASE = "tpch-sf100.hyper"
 
 DROP_ANSWER_SQL = "Drop table if exists ans;"
 
-HYPER_FAILING_OPERATOR_QUERIES = ['l_orderkey-l_partkey.sql', 'l_orderkey-l_suppkey.sql', 'l_suppkey-l_partkey-l_orderkey.sql', 'l_suppkey-l_partkey-l_shipinstruct.sql', 'l_suppkey-l_partkey-l_returnflag-l_linestatus.sql', 'l_suppkey-l_partkey-l_shipinstruct-l_shipmode.sql', 'l_suppkey-l_partkey-l_shipmode.sql']
+HYPER_FAILING_OPERATOR_QUERIES = ['l_orderkey-l_partkey.sql',
+'l_orderkey-l_suppkey.sql',
+'l_suppkey-l_partkey-l_orderkey.sql',
+'l_suppkey-l_partkey-l_shipinstruct.sql',
+'l_suppkey-l_partkey-l_returnflag-l_linestatus.sql',
+'l_suppkey-l_partkey-l_shipinstruct-l_shipmode.sql',
+'l_suppkey-l_partkey-l_shipmode.sql',
+'hash-join-large.sql'
+]
 
 def get_mem_lock_file(query_file):
     return query_file.replace('.sql', '_lock')
@@ -105,22 +113,23 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
 
         for run in ["cold", "hot"]:
             print(f"{run} run")
-            if benchmark == 'join-operators':
+            if benchmark == 'operators' and query_file.find("join") >= 1:
                 con.sql(DROP_ANSWER_SQL)
+                time.sleep(3)
             # Create a cursor to execute SQL queries
             start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run)
             # Execute the query.
-            # join operators save the data, so .sql is enough
-            # other benchmarks need .execute so that all data is processed in duckdb
-            if benchmark == 'join-operators':
+            if benchmark == 'operators' and query_file.find("join") >= 1:
+                # join operators save the data, so .sql is enough
                 con.sql(query)
             else:
+                # other benchmarks need .execute so that all data is processed in duckdb
                 con.sql(query).execute()
             # stop polling memory
             stop_polling_mem(query_file)
             time.sleep(4)
 
-        if benchmark == 'join-operators':
+        if benchmark == 'operators' and query_file.find("join") >= 1:
             con.sql(DROP_ANSWER_SQL)
         
     except Exception as e:
@@ -141,13 +150,14 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             for run in ["cold", "hot"]:
                 print(f"{run} run")
-                if benchmark == 'join-operators':
+                if benchmark == 'operators':
                     con.execute_command(DROP_ANSWER_SQL)
+                    time.sleep(3)
                 start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
                 time.sleep(4)
-            if benchmark == 'join-operators':
+            if benchmark == 'operators':
                 con.execute_command(DROP_ANSWER_SQL)
     print(f"done.")
     time.sleep(5)
@@ -197,7 +207,7 @@ def run_all_queries():
 
     benchmarks = [args.benchmark]
     if args.benchmark == 'all':
-        benchmarks = ['tpch', 'aggr-operators', 'join-operators']
+        benchmarks = ['tpch', 'operators']
 
 
     systems = [args.system]
