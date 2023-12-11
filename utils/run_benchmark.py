@@ -97,6 +97,7 @@ def run_query(query_file, system, benchmark_name, benchmark):
 def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
     if query_file in HYPER_FAILING_OPERATOR_QUERIES:
         print(f"hyper fails, skipping query for duckdb as well")
+        return
     try:
         con = duckdb.connect(TPCH_DATABASE)
 
@@ -135,6 +136,7 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
     query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
     if query_file in HYPER_FAILING_OPERATOR_QUERIES:
         print(f"hyper fails, skipping query")
+        return
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             for run in ["cold", "hot"]:
@@ -195,7 +197,7 @@ def run_all_queries():
 
     benchmarks = [args.benchmark]
     if args.benchmark == 'all':
-        benchmarks = ['tpch', 'operator']
+        benchmarks = ['tpch', 'aggr-operators', 'join-operators']
 
 
     systems = [args.system]
