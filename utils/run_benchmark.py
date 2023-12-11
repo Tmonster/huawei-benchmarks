@@ -104,17 +104,22 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
 
         for run in ["cold", "hot"]:
             print(f"{run} run")
-            if benchmark == 'operator':
+            if benchmark == 'join-operators':
                 con.sql(DROP_ANSWER_SQL)
             # Create a cursor to execute SQL queries
             start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run)
-            # Execute the query
-            con.sql(query).execute()
+            # Execute the query.
+            # join operators save the data, so .sql is enough
+            # other benchmarks need .execute so that all data is processed in duckdb
+            if benchmark == 'join-operators':
+                con.sql(query)
+            else:
+                con.sql(query).execute()
             # stop polling memory
             stop_polling_mem(query_file)
             time.sleep(4)
 
-        if benchmark == 'operator':
+        if benchmark == 'join-operators':
             con.sql(DROP_ANSWER_SQL)
         
     except Exception as e:
@@ -134,13 +139,13 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             for run in ["cold", "hot"]:
                 print(f"{run} run")
-                if benchmark == 'operator':
+                if benchmark == 'join-operators':
                     con.execute_command(DROP_ANSWER_SQL)
                 start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
                 time.sleep(4)
-            if benchmark == 'operator':
+            if benchmark == 'join-operators':
                 con.execute_command(DROP_ANSWER_SQL)
     print(f"done.")
     time.sleep(5)

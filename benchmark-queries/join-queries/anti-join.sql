@@ -1,1 +1,0 @@
-select * from partsupp anti join part on p_partkey = ps_partkey;
