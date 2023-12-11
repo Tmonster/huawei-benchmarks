@@ -13,7 +13,7 @@ HYPER_DATABASE = "tpch-sf100.hyper"
 
 DROP_ANSWER_SQL = "Drop table if exists ans;"
 
-HYPER_FAILING_OPERATOR_QUERIES = ['l_orderkey-l_partkey.sql', 'l_orderkey-l_suppkey.sql', 'l_suppkey-l_partkey-l_orderkey.sql', 'l_suppkey-l_partkey-l_shipinstruct.sql']
+HYPER_FAILING_OPERATOR_QUERIES = ['l_orderkey-l_partkey.sql', 'l_orderkey-l_suppkey.sql', 'l_suppkey-l_partkey-l_orderkey.sql', 'l_suppkey-l_partkey-l_shipinstruct.sql', 'l_suppkey-l_partkey-l_returnflag-l_linestatus.sql', 'l_suppkey-l_partkey-l_shipinstruct-l_shipmode.sql', 'l_suppkey-l_partkey-l_shipmode.sql']
 
 def get_mem_lock_file(query_file):
     return query_file.replace('.sql', '_lock')
@@ -211,7 +211,7 @@ def run_all_queries():
         query_file_names = get_query_file_names(benchmark)
         
         mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
-        if overwrite and os.file.exists(mem_db):
+        if overwrite and os.path.exists(mem_db):
             os.remove(mem_db)
 
         for query_file in query_file_names:
