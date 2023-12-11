@@ -190,7 +190,6 @@ def run_all_queries():
     if os.path.isdir(benchmark_name):
         print(f"benchmark {benchmark_name} already exists. Going to overwrite")
         overwrite = True
-        exit(1)
     else:
         os.makedirs(benchmark_name)
 
