@@ -11,6 +11,9 @@ from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 TPCH_DATABASE = "tpch-sf100.duckdb"
 HYPER_DATABASE = "tpch-sf100.hyper"
 
+DROP_ANSWER_SQL = "Drop table ans if exists;"
+
+HYPER_FAILING_OPERATOR_QUERIES = ['l_orderkey-l_partkey.sql', 'l_orderkey-l_suppkey.sql', 'l_suppkey-l_partkey-l_orderkey.sql', 'l_suppkey-l_partkey-l_shipinstruct.sql']
 
 def get_mem_lock_file(query_file):
     return query_file.replace('.sql', '_lock')
@@ -99,6 +102,8 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
 
         for run in ["cold", "hot"]:
             print(f"{run} run")
+            if benchmark == 'operator':
+                con.sql(DROP_ANSWER_SQL)
             # Create a cursor to execute SQL queries
             start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run)
             # Execute the query
@@ -106,6 +111,9 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
             # stop polling memory
             stop_polling_mem(query_file)
             time.sleep(4)
+
+        if benchmark == 'operator':
+            con.sql(DROP_ANSWER_SQL)
         
     except Exception as e:
         print(f"Error: {e}")
@@ -118,14 +126,20 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
     db_path = f"{HYPER_DATABASE}"
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
+    if query_file in HYPER_FAILING_OPERATOR_QUERIES:
+        print(f"hyper fails, skipping query")
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             for run in ["cold", "hot"]:
                 print(f"{run} run")
+                if benchmark == 'operator':
+                    con.execute_command(DROP_ANSWER_SQL)
                 start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
                 time.sleep(4)
+            if benchmark == 'operator':
+                con.execute_command(DROP_ANSWER_SQL)
     print(f"done.")
     time.sleep(5)
 
