@@ -1,0 +1,1 @@
+create table ans as (select * from supplier, partsupp where s_suppkey = ps_suppkey);

@@ -1,0 +1,1 @@
+create table ans as (select * from part, partsupp where p_partkey = ps_partkey)

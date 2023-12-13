@@ -73,14 +73,14 @@ def main():
             # can't read from external sources.
             print("copying data from parquet")
             con.execute_query("""START TRANSACTION;""").close()
-            con.execute_query(f"""Copy customer FROM 'tpch_data/customer-sf-100.csv' WITH (FORMAT CSV);""").close()
-            con.execute_query(f"""Copy lineitem FROM 'tpch_data/lineitem-sf-100.csv' WITH (FORMAT CSV);""").close()
-            con.execute_query(f"""Copy nation FROM 'tpch_data/nation-sf-100.csv' WITH (FORMAT CSV);""").close()
-            con.execute_query(f"""Copy orders FROM 'tpch_data/orders-sf-100.csv' WITH (FORMAT CSV);""").close()
-            con.execute_query(f"""Copy part FROM 'tpch_data/part-sf-100.csv' WITH (FORMAT CSV);""").close()
-            con.execute_query(f"""Copy partsupp FROM 'tpch_data/partsupp-sf-100.csv' WITH (FORMAT CSV);""").close()
-            con.execute_query(f"""Copy region FROM 'tpch_data/region-sf-100.csv' WITH (FORMAT CSV);""").close()
-            con.execute_query(f"""Copy supplier FROM 'tpch_data/supplier-sf-100.csv' WITH (FORMAT CSV);""").close()
+            con.execute_query(f"""Copy customer FROM 'tpch_data/customer.csv' WITH (FORMAT CSV, HEADER 1);""").close()
+            con.execute_query(f"""Copy lineitem FROM 'tpch_data/lineitem.csv' WITH (FORMAT CSV, HEADER 1);""").close()
+            con.execute_query(f"""Copy nation FROM 'tpch_data/nation.csv' WITH (FORMAT CSV, HEADER 1);""").close()
+            con.execute_query(f"""Copy orders FROM 'tpch_data/orders.csv' WITH (FORMAT CSV, HEADER 1);""").close()
+            con.execute_query(f"""Copy part FROM 'tpch_data/part.csv' WITH (FORMAT CSV, HEADER 1);""").close()
+            con.execute_query(f"""Copy partsupp FROM 'tpch_data/partsupp.csv' WITH (FORMAT CSV, HEADER 1);""").close()
+            con.execute_query(f"""Copy region FROM 'tpch_data/region.csv' WITH (FORMAT CSV, HEADER 1);""").close()
+            con.execute_query(f"""Copy supplier FROM 'tpch_data/supplier.csv' WITH (FORMAT CSV, HEADER 1);""").close()
             con.execute_query("""COMMIT;""").close()
             
             # named constraint support not supported
