@@ -11,6 +11,8 @@ from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 TPCH_DATABASE = "tpch-sf100.duckdb"
 HYPER_DATABASE = "tpch-sf100.hyper"
 
+VALID_SYSTEMS = ['duckdb', 'hyper']
+
 DROP_ANSWER_SQL = "Drop table if exists ans;"
 
 HYPER_FAILING_OPERATOR_QUERIES = [
@@ -206,14 +208,21 @@ def run_all_queries():
         print("Usage: python3 utils/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
         exit(1)
 
-    benchmarks = [args.benchmark]
+    benchmarks = args.benchmark.split(",")
     if args.benchmark == 'all':
         benchmarks = ['tpch', 'operators']
 
 
-    systems = [args.system]
+    systems = args.system.split(",")
+    if len(systems) == 0:
+        print("please pass valid system names. Valid systems are " + VALID_SYSTEMS)
+
     if systems[0] == "all":
         systems = ["duckdb", "hyper"]
+
+    for system_ in systems:
+        if system_ not in VALID_SYSTEMS:
+            print("please pass valid system names. Valid systems are " + VALID_SYSTEMS
 
     if benchmark_name is None:
         # create benchmark name

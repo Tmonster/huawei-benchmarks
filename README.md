@@ -30,7 +30,12 @@ This will format and mount a copy of the benchmarks at `~/memory-pressure-benchm
 
 To run the benchmark
 ```
-python3 utils/run_benchmark.py --benchmark={benchmark_name} --system=all
+python3 utils/run_benchmark.py --benchmark_name={benchmark_name} --benchmark={benchmark} --system=all
+```
+
+example
+```
+python3 utils/run_benchmark.py --benchmark_name=jan-1-duckdb-dev --benchmark=tpch --system=duckdb
 ```
 
 
