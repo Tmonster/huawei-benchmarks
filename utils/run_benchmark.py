@@ -96,21 +96,25 @@ def get_query_from_file(file_name):
         return None
 
 
-def run_query(query_file, system, benchmark_name, benchmark):
+def run_query(query_file, system, memory_limit, benchmark_name, benchmark):
     if system == "duckdb":
-        run_duckdb_hot_cold(query_file, benchmark_name, benchmark)
+        run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark)
     elif system == "hyper":
-        run_hyper_hot_cold(query_file, benchmark_name, benchmark)
+        run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark)
     else:
         print("System must be hyper or duckdb")
         exit(1)
 
-def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
+def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
     if query_file in HYPER_FAILING_OPERATOR_QUERIES:
         print(f"hyper fails, skipping query for duckdb as well")
         return
     try:
         con = duckdb.connect(TPCH_DATABASE)
+
+        if memory_limit > 0:
+            memory_limit_str = f"'{memory_limit}GB'"
+            con.sql(f"SET memory_limit={memory_limit_str}")
 
         query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
 
@@ -142,14 +146,20 @@ def run_duckdb_hot_cold(query_file, benchmark_name, benchmark):
     print(f"done.")
     time.sleep(5)
 
-def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
+def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
     db_path = f"{HYPER_DATABASE}"
+
+    memory_limit_str = f"{memory_limit}g"
+    if memory_limit == 0:
+        # default value as quoted here https://help.tableau.com/current/server/en-us/cli_configuration-set_tsm.htm?_gl=1*1lb2mz5*_ga*NjExMDIxMzgzLjE3MDAyMjE1Mjc.*_ga_8YLN0SNXVS*MTcwNDgwMTAwNC40LjEuMTcwNDgwMjE1OC4wLjAuMA
+        memory_limit_str = "80%"
+
     process_parameters = {"default_database_version": "2"}
     query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
     if query_file in HYPER_FAILING_OPERATOR_QUERIES:
         print(f"hyper fails, skipping query")
         return
-    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
+    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters, memory_limit=memory_limit_str) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             for run in ["cold", "hot"]:
                 print(f"{run} run")
@@ -165,10 +175,10 @@ def run_hyper_hot_cold(query_file, benchmark_name, benchmark):
     print(f"done.")
     time.sleep(5)
 
-def profile_query_mem(query_file, systems, benchmark_name, benchmark):
+def profile_query_mem(query_file, systems, memory_limit, benchmark_name, benchmark):
     for system in systems:
         print(f"profiling memory for {system}. query {query_file}")
-        run_query(query_file, system, benchmark_name, benchmark)
+        run_query(query_file, system, memory_limit, benchmark_name, benchmark)
         print(f"done profiling")
 
 def get_query_file_names(benchmark):
@@ -198,6 +208,7 @@ def run_all_queries():
     parser.add_argument('--benchmark_name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
     parser.add_argument('--benchmark', type=str, help='list of benchmarks to run. \'all\', \'tpch\', etc.')
     parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
+    parser.add_argument('--memory_limit', type=int, help="memory limit for both systems", const=0)
 
     # Parse the command-line arguments
     args = parser.parse_args()
@@ -213,6 +224,8 @@ def run_all_queries():
         benchmarks = ['tpch', 'operators']
 
 
+    memory_limit = args.memory_limit
+
     systems = args.system.split(",")
     if len(systems) == 0:
         print("please pass valid system names. Valid systems are " + VALID_SYSTEMS)
@@ -222,7 +235,7 @@ def run_all_queries():
 
     for system_ in systems:
         if system_ not in VALID_SYSTEMS:
-            print("please pass valid system names. Valid systems are " + VALID_SYSTEMS
+            print("please pass valid system names. Valid systems are " + VALID_SYSTEMS)
 
     if benchmark_name is None:
         # create benchmark name
@@ -244,7 +257,7 @@ def run_all_queries():
             os.remove(mem_db)
 
         for query_file in query_file_names:
-            profile_query_mem(query_file, systems, benchmark_name, benchmark)
+            profile_query_mem(query_file, systems, memory_limit, benchmark_name, benchmark)
 
         # write the duckdb to csv 
         
