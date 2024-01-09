@@ -154,12 +154,12 @@ def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
         # default value as quoted here https://help.tableau.com/current/server/en-us/cli_configuration-set_tsm.htm?_gl=1*1lb2mz5*_ga*NjExMDIxMzgzLjE3MDAyMjE1Mjc.*_ga_8YLN0SNXVS*MTcwNDgwMTAwNC40LjEuMTcwNDgwMjE1OC4wLjAuMA
         memory_limit_str = "80%"
 
-    process_parameters = {"default_database_version": "2"}
+    process_parameters = {"default_database_version": "2", "memory_limit": memory_limit_str}
     query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
     if query_file in HYPER_FAILING_OPERATOR_QUERIES:
         print(f"hyper fails, skipping query")
         return
-    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters, memory_limit=memory_limit_str) as hyper:
+    with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             for run in ["cold", "hot"]:
                 print(f"{run} run")
