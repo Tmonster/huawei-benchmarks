@@ -72,10 +72,10 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run, hyper_
 
             query = query_file.replace('.sql', '')
             mem_lock_file = get_mem_lock_file(query_file)
-            if system == 'duckdb':
-                args = ['python3', 'utils/poll_memory.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query]
-            if system == 'hyper':
-                args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, str(hyper_pid)]
+            # if system == 'duckdb':
+            #     args = ['python3', 'utils/poll_memory.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query]
+            # if system == 'hyper':
+            args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, str(hyper_pid)]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
@@ -122,14 +122,14 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
             con.sql(f"SET memory_limit={memory_limit_str}")
 
         query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
-
+        pid = os.getpid()
         for run in ["cold", "hot"]:
             print(f"{run} run")
             if benchmark == 'operators' and query_file.find("join") >= 1:
                 con.sql(DROP_ANSWER_SQL)
                 time.sleep(3)
             # Create a cursor to execute SQL queries
-            start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run, 0)
+            start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run, pid)
             # Execute the query.
             if benchmark == 'operators' and query_file.find("join") >= 1:
                 # join operators save the data, so .sql is enough
