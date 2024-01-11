@@ -15,8 +15,7 @@ def parse_memory_info(file_path):
     try:
         with open(file_path, 'r') as file:
             for line in file:
-                parts = re.split(r'\t+', line)
-                parts = list(map(lambda x: x.strip(), parts))
+                parts = line.split()
                 if len(parts) == 2:
                     name, value = parts
                 if len(parts) == 3:
@@ -68,7 +67,7 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
     while os.path.exists(lock_file):
         process_status_file = get_proc_status_file(pid)
         print('process_status_file = ' + process_status_file)
-        parsed_mem_info = parse_memory_info(get_proc_status_file(pid))
+        parsed_mem_info = parse_memory_info(process_status_file)
 
         now = time.time()
         log = benchmark_identifiers + "," + str(now) + "," + get_csv_line(parsed_mem_info) + "\n"
@@ -81,7 +80,7 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 8:
+    if len(sys.argv) != 9:
         print("Usage: python poll_process_mem.py data_db lock_file benchark_name benchmark system run query pid")
 
     data_db = sys.argv[1]
