@@ -70,7 +70,8 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run):
 
             query = query_file.replace('.sql', '')
             mem_lock_file = get_mem_lock_file(query_file)
-            args = ['python3', 'utils/poll_memory.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query]
+            pid = os.getpid()
+            args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, pid]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
