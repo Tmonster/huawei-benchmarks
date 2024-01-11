@@ -76,7 +76,7 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
 
         now = time.time()
         log = benchmark_identifiers + "," + str(now) + "," + get_csv_line(parsed_mem_info) + "\n"
-        con.sql(f"INSERT INTO time_info VALUES ({log})")
+        con.sql(f"INSERT INTO proc_mem_info VALUES ({log})")
 
         # Wait for 0.2 seconds before polling again
         time.sleep(0.2)
@@ -86,7 +86,7 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
 
 if __name__ == "__main__":
     if len(sys.argv) != 8:
-        print("Usage: python poll_memory.py data_db lock_file benchark_name benchmark system run query pid")
+        print("Usage: python poll_process_mem.py data_db lock_file benchark_name benchmark system run query pid")
 
     data_db = sys.argv[1]
     lock_file = sys.argv[2]

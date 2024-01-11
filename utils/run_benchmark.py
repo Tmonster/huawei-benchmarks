@@ -53,7 +53,8 @@ def stop_polling_mem(query_file):
     except Exception as e:
         print(f"Error: {e}")
 
-def start_polling_mem(query_file, system, benchmark_name, benchmark, run):
+
+def start_polling_mem(query_file, system, benchmark_name, benchmark, run, hyper_pid):
     def run_script():
         try:
             mem_db = get_mem_usage_db_file(benchmark_name, benchmark)
@@ -70,8 +71,10 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run):
 
             query = query_file.replace('.sql', '')
             mem_lock_file = get_mem_lock_file(query_file)
-            pid = os.getpid()
-            args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, pid]
+            if system == 'duckdb':
+                args = ['python3', 'utils/poll_memory.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query]
+            if system == 'hyper':
+                args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, hyper_pid]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
@@ -162,12 +165,19 @@ def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
         return
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
+            children = current_process.children(recursive=True)
+            if len(children) > 1:
+                print("too many child processes. aborting")
+                exit(0)
+
+            hyper_pid = children[0].pid
+                
             for run in ["cold", "hot"]:
                 print(f"{run} run")
                 if benchmark == 'operators':
                     con.execute_command(DROP_ANSWER_SQL)
                     time.sleep(3)
-                start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run)
+                start_polling_mem(query_file, "hyper", benchmark_name, benchmark, run, hyper_pid)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
                 time.sleep(4)
