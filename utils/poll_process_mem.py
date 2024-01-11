@@ -66,7 +66,6 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
     benchmark_identifiers = get_query_specific_values(benchmark_name, benchmark, system, run, query)
     while os.path.exists(lock_file):
         process_status_file = get_proc_status_file(pid)
-        print('process_status_file = ' + process_status_file)
         parsed_mem_info = parse_memory_info(process_status_file)
 
         now = time.time()

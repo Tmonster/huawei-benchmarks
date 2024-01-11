@@ -11,7 +11,7 @@ args = commandArgs(trailingOnly=TRUE)
 
 benchmark_name = args[1]
 
-dbExecute(con, sprintf("CREATE TABLE results AS FROM read_csv_auto('benchmarks/%s/*.csv', union_by_name=true)", benchmark_name))
+# dbExecute(con, sprintf("CREATE TABLE results AS FROM read_csv_auto('benchmarks/%s/*.csv', union_by_name=true)", benchmark_name))
 
 
 for (benchmark_type in c('tpch', 'operators')) {
@@ -25,8 +25,8 @@ for (benchmark_type in c('tpch', 'operators')) {
   dbExecute(con, "create or replace view duckdb_results as select * from time_info")
   dbExecute(con, "create or replace view hyper_results as select * from proc_mem_info")
 
-  dbExecute(con, sprintf("create or replace temporary table duckdb_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from duckdb_results where run_type = 'hot' and benchmark = '%s' group by all", benchmark_type));
-  dbExecute(con, sprintf("create or replace temporary table hyper_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from hyper_results where run_type = 'hot' and benchmark = '%s' group by all", benchmark_type));
+  dbExecute(con, sprintf("create or replace temporary table duckdb_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from duckdb_results where run_type = 'cold' and benchmark = '%s' group by all", benchmark_type));
+  dbExecute(con, sprintf("create or replace temporary table hyper_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from hyper_results where run_type = 'cold' and benchmark = '%s' group by all", benchmark_type));
 
   dbExecute(con, "
     Create or replace temporary table duckdb_results_x_y as select (MemTotal - MemAvailable)/1000000 as MemUsed, Time - duckdb_start_times.start_time as time, results.query_name as query, results.system from duckdb_results results, duckdb_start_times where duckdb_start_times.system = results.system and  duckdb_start_times.query = results.query_name and  duckdb_start_times.run_type = results.run_type and duckdb_start_times.benchmark = results.benchmark and duckdb_start_times.benchmark_name = results.benchmark_name;")
@@ -43,6 +43,6 @@ for (benchmark_type in c('tpch', 'operators')) {
     xlab("time [s]") +
     ylab("Memory Used [GB]") +
     theme_bw()
- 	print(sprintf("saving file benchmarks/%s/%s/summary_hot.pd", benchmark_name, benchmark_type))
-  ggsave(sprintf("benchmarks/%s/%s/summary_hot.pdf", benchmark_name, benchmark_type), width=14, height=12)
+ 	print(sprintf("saving file benchmarks/%s/%s/summary_cold.pd", benchmark_name, benchmark_type))
+  ggsave(sprintf("benchmarks/%s/%s/summary_cold.pdf", benchmark_name, benchmark_type), width=14, height=12)
 }
