@@ -36,13 +36,13 @@ def get_csv_line(parsed_mem_info):
         # Get the sorted values from the dictionary
         sorted_keys = sorted(parsed_mem_info.keys())
         csv_string = ""
-        separator = ""
+        separator = ","
         # Convert the sorted values to some separated thing
         for key in known_keys:
             if key in parsed_mem_info:
-                csv_string += separator + f"'{parsed_mem_info[key]}'"
+                csv_string += f"'{parsed_mem_info[key]}'" + separator
             else:
-                csv_string += separator + separator
+                csv_string += "''" + separator
             separator = ","
         return csv_string
     except Exception as e:

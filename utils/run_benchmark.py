@@ -129,7 +129,7 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
                 con.sql(DROP_ANSWER_SQL)
                 time.sleep(3)
             # Create a cursor to execute SQL queries
-            start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run)
+            start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run, 0)
             # Execute the query.
             if benchmark == 'operators' and query_file.find("join") >= 1:
                 # join operators save the data, so .sql is enough
@@ -275,8 +275,10 @@ def run_all_queries():
         # write the duckdb to csv 
         
         con = duckdb.connect(mem_db)
-        csv_result_file = f"{benchmark_name}/{benchmark}-results"
-        con.sql(f"copy time_info to '{csv_result_file}.csv' (FORMAT CSV, HEADER 1)")
+        csv_result_file_duckdb = f"{benchmark_name}/{benchmark}-duckdb-results"
+        csv_result_file_hyper = f"{benchmark_name}/{benchmark}-hyper-results"
+        con.sql(f"copy time_info to '{csv_result_file_duckdb}.csv' (FORMAT CSV, HEADER 1)")
+        con.sql(f"copy proc_mem_info to '{csv_result_file_hyper}.csv' (FORMAT CSV, HEADER 1)")
         # os.remove(mem_db)
         con.close()
 

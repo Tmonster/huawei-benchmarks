@@ -21,7 +21,7 @@ def parse_memory_info(file_path):
                     name, value, kb = parts
                 if len(parts) > 3:
                     name = parts[0]
-                    value = ' '.join(parts[])
+                    value = ' '.join(parts[1:])
 
                 value = str(value)
                 name = name.replace(":", "")
