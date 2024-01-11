@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS time_info(
 );
 
 create table if not exists proc_mem_info(
+	"Time" DOUBLE,
 	Name VARCHAR, -- hyperdMain
 	Umask VARCHAR, -- 0002
 	State VARCHAR, -- S (sleeping)

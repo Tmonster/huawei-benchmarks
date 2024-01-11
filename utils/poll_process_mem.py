@@ -12,14 +12,11 @@ known_keys = ['Name', 'Umask', 'State', 'Tgid', 'Ngid', 'Pid', 'PPid', 'TracerPi
 
 def parse_memory_info(file_path):
     result = {}
-
     try:
         with open(file_path, 'r') as file:
             for line in file:
                 parts = re.split(r'\t+', line)
-                
-                parts = list(map(lambda x: x.strip()), parts)
-
+                parts = list(map(lambda x: x.strip(), parts))
                 if len(parts) == 2:
                     name, value = parts
                 if len(parts) == 3:
@@ -33,14 +30,12 @@ def parse_memory_info(file_path):
         print(f"Error: File '{file_path}' not found.")
     except Exception as e:
         print(f"Error: {e}")
-
     return result
 
 def get_csv_line(parsed_mem_info):
     try:
         # Get the sorted values from the dictionary
         sorted_keys = sorted(parsed_mem_info.keys())
-
         csv_string = ""
         separator = ""
         # Convert the sorted values to some separated thing
@@ -50,7 +45,6 @@ def get_csv_line(parsed_mem_info):
             else:
                 csv_string += separator + separator
             separator = ","
-
         return csv_string
     except Exception as e:
         print(f"Error: {e}")
@@ -72,6 +66,8 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
 
     benchmark_identifiers = get_query_specific_values(benchmark_name, benchmark, system, run, query)
     while os.path.exists(lock_file):
+        process_status_file = get_proc_status_file(pid)
+        print('process_status_file = ' + process_status_file)
         parsed_mem_info = parse_memory_info(get_proc_status_file(pid))
 
         now = time.time()

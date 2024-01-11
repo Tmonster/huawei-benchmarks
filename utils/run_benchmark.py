@@ -1,4 +1,5 @@
 import os
+import psutil
 import duckdb
 import threading
 import subprocess
@@ -74,7 +75,7 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run, hyper_
             if system == 'duckdb':
                 args = ['python3', 'utils/poll_memory.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query]
             if system == 'hyper':
-                args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, hyper_pid]
+                args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, str(hyper_pid)]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
@@ -165,6 +166,7 @@ def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
         return
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
+            current_process = psutil.Process()
             children = current_process.children(recursive=True)
             if len(children) > 1:
                 print("too many child processes. aborting")
@@ -219,7 +221,7 @@ def run_all_queries():
     parser.add_argument('--benchmark_name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
     parser.add_argument('--benchmark', type=str, help='list of benchmarks to run. \'all\', \'tpch\', etc.')
     parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
-    parser.add_argument('--memory_limit', type=int, help="memory limit for both systems", const=0)
+    parser.add_argument('--memory_limit', type=int, help="memory limit for both systems", default=0)
 
     # Parse the command-line arguments
     args = parser.parse_args()
