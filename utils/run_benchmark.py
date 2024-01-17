@@ -72,9 +72,7 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run, hyper_
 
             query = query_file.replace('.sql', '')
             mem_lock_file = get_mem_lock_file(query_file)
-            # if system == 'duckdb':
-            #     args = ['python3', 'utils/poll_memory.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query]
-            # if system == 'hyper':
+
             args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, str(hyper_pid)]
             
             # Run the script using subprocess.Popen
@@ -102,6 +100,10 @@ def get_query_from_file(file_name):
 
 
 def run_query(query_file, system, memory_limit, benchmark_name, benchmark):
+    if query_file in HYPER_FAILING_OPERATOR_QUERIES:
+        print(f"hyper fails, skipping query")
+        return
+    
     if system == "duckdb":
         run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark)
     elif system == "hyper":
@@ -111,9 +113,7 @@ def run_query(query_file, system, memory_limit, benchmark_name, benchmark):
         exit(1)
 
 def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
-    if query_file in HYPER_FAILING_OPERATOR_QUERIES:
-        print(f"hyper fails, skipping query for duckdb as well")
-        return
+
     try:
         con = duckdb.connect(TPCH_DATABASE)
 
@@ -161,15 +161,12 @@ def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
 
     process_parameters = {"default_database_version": "2", "memory_limit": memory_limit_str}
     query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
-    if query_file in HYPER_FAILING_OPERATOR_QUERIES:
-        print(f"hyper fails, skipping query")
-        return
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters=process_parameters) as hyper:
         with Connection(hyper.endpoint, db_path, CreateMode.CREATE_IF_NOT_EXISTS) as con:
             current_process = psutil.Process()
             children = current_process.children(recursive=True)
             if len(children) > 1:
-                print("too many child processes. aborting")
+                print("hyper has too many child processes. aborting")
                 exit(0)
 
             hyper_pid = children[0].pid
@@ -214,20 +211,11 @@ def get_query_file_names(benchmark):
     file_list.sort()
     return file_list
 
-def run_all_queries():
-    parser = argparse.ArgumentParser(description='Run tpch on hyper or duckdb')
 
-    # Add command-line arguments
-    parser.add_argument('--benchmark_name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
-    parser.add_argument('--benchmark', type=str, help='list of benchmarks to run. \'all\', \'tpch\', etc.')
-    parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
-    parser.add_argument('--memory_limit', type=int, help="memory limit for both systems", default=0)
 
-    # Parse the command-line arguments
-    args = parser.parse_args()
-
-    # Access the values using dot notation (args.argument_name)
+def parse_args_and_setup(args):
     benchmark_name = "benchmarks/" + args.benchmark_name
+    
     if args.system not in ["hyper", "duckdb", "all"]:
         print("Usage: python3 utils/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
         exit(1)
@@ -255,6 +243,12 @@ def run_all_queries():
         print("please pass benchmark name")
         exit(1)
 
+    return benchmark_name, benchmarks, systems
+
+
+def main(args):
+    benchmark_name, benchmarks, systems = parse_args_and_setup(args)
+
     overwrite = False
     if os.path.isdir(benchmark_name):
         print(f"benchmark {benchmark_name} already exists. Going to overwrite")
@@ -281,6 +275,20 @@ def run_all_queries():
         con.sql(f"copy proc_mem_info to '{csv_result_file_hyper}.csv' (FORMAT CSV, HEADER 1)")
         # os.remove(mem_db)
         con.close()
+
+
+
+def run_all_queries():
+    parser = argparse.ArgumentParser(description='Run tpch on hyper or duckdb')
+
+    # Add command-line arguments
+    parser.add_argument('--benchmark_name', type=str, help='Specify the benchmark name. Benchmark files are stored in this directory')
+    parser.add_argument('--benchmark', type=str, help='list of benchmarks to run. \'all\', \'tpch\', etc.')
+    parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
+    parser.add_argument('--memory_limit', type=int, help="memory limit for both systems", default=0)
+
+    # Parse the command-line arguments
+    args = parser.parse_args()
 
 
 
