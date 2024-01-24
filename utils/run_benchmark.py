@@ -243,11 +243,11 @@ def parse_args_and_setup(args):
         print("please pass benchmark name")
         exit(1)
 
-    return benchmark_name, benchmarks, systems
+    return benchmark_name, benchmarks, systems, memory_limit
 
 
 def main(args):
-    benchmark_name, benchmarks, systems = parse_args_and_setup(args)
+    benchmark_name, benchmarks, systems, memory_limit = parse_args_and_setup(args)
 
     overwrite = False
     if os.path.isdir(benchmark_name):
@@ -289,6 +289,7 @@ def run_all_queries():
 
     # Parse the command-line arguments
     args = parser.parse_args()
+    main(args)
 
 
 
