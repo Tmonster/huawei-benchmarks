@@ -10,7 +10,6 @@ known_keys = ['Active', 'Active(anon)', 'Active(file)', 'AnonHugePages', 'AnonPa
 
 def parse_memory_info(file_path):
     result = {}
-
     try:
         with open(file_path, 'r') as file:
             for line in file:
@@ -20,6 +19,9 @@ def parse_memory_info(file_path):
                     name, value = parts
                 if len(parts) == 3:
                     name, value, kb = parts
+                if len(parts) > 3:
+                    name = parts[0]
+                    value = ' '.join(parts[1:])
 
                 value = str(value)
                 name = name.replace(":", "")
@@ -31,6 +33,7 @@ def parse_memory_info(file_path):
         print(f"Error: {e}")
 
     return result
+
 
 def get_csv_line(parsed_mem_info):
     try:
