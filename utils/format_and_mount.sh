@@ -14,9 +14,9 @@ fi
 rm -rf $parent/memory-pressure-benchmarks-metal
 
 # format the mount
-sudo mkfs -t xfs /dev/nvme2n1
+sudo mkfs -t xfs -f /dev/nvme2n1
 
-mkdir $parent/memory-pressure-benchmarks-metal
+mkdir -p $parent/memory-pressure-benchmarks-metal
 # mount the nvme volumn
 sudo mount /dev/nvme2n1 $parent/memory-pressure-benchmarks-metal
 # change ownsership of the volume
@@ -31,7 +31,8 @@ if [[ $# -gt 0 ]]
 then
 	echo "Creating data"
 	cd $parent/memory-pressure-benchmarks
-	duckdb tpch-sf100.duckdb -c "install httpfs; load httpfs; call dbgen(sf=100);"
+	wget https://s3.console.aws.amazon.com/s3/object/duckdb-blobs?region=us-east-1&bucketType=general&prefix=data/tpch-sf100.db
+	mv tpch-sf100.db tpch-sf100.duckdb
 	duckdb tpch-sf100.duckdb -c "export database 'tpch_data' (FORMAT CSV, HEADER 1);"
 	python3 hyper/load.py
 	cd $parent/memory-pressure-benchmarks-metal
