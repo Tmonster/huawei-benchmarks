@@ -10,6 +10,7 @@ from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 
 
 TPCH_DATABASE = "tpch-sf100.duckdb"
+TMM_DATABASE = "tmm.duckdb"
 HYPER_DATABASE = "tpch-sf100.hyper"
 
 VALID_SYSTEMS = ['duckdb', 'hyper']
@@ -66,14 +67,14 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run, hyper_
             # create db if it does not yet exist.
             if not os.path.exists(mem_db):
                 con = duckdb.connect(mem_db)
-                with open('utils/data_schema.sql') as f: schema = f.read()
+                with open('memory_process/data_schema.sql') as f: schema = f.read()
                 con.sql(f"{schema}")
                 con.close()
 
             query = query_file.replace('.sql', '')
             mem_lock_file = get_mem_lock_file(query_file)
 
-            args = ['python3', 'utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, str(hyper_pid)]
+            args = ['python3', 'memory_utils/poll_process_mem.py', mem_db, mem_lock_file, benchmark_name, benchmark, system, run, query, str(hyper_pid)]
             
             # Run the script using subprocess.Popen
             subprocess.run(args, check=True)
@@ -99,50 +100,86 @@ def get_query_from_file(file_name):
         return None
 
 
-def run_query(query_file, system, memory_limit, benchmark_name, benchmark):
+def run_query(query_file, system, memory_limit, benchmark_name, benchmark, concurrent_connections):
     if query_file in HYPER_FAILING_OPERATOR_QUERIES:
         print(f"hyper fails, skipping query")
         return
     
     if system == "duckdb":
-        run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark)
+        run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark, concurrent_connections)
     elif system == "hyper":
-        run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark)
+        run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark, concurrent_connections)
     else:
         print("System must be hyper or duckdb")
         exit(1)
 
-def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
-
-    try:
-        con = duckdb.connect(TPCH_DATABASE)
-
-        if memory_limit > 0:
+def set_duckdb_memory_limit(connections, memory_limit):
+    if memory_limit > 0:
+        for con in connections:
             memory_limit_str = f"'{memory_limit}GB'"
             con.sql(f"SET memory_limit={memory_limit_str}")
 
+def execute_query_on_con(con, query):
+    thread_name = str(current_thread().name)
+    res = con.sql(query).execute()
+    print(f"{thread_name} done")
+
+def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark, concurrent_connections):
+    try:
+
+        # setup connections here.
+        connections = []
+        db_file = benchmark == "tmm" ? TMM_DATABSAE : TPCH_DATABASE
+        read_only = benchmark == "tmm"
+        if not os.file.isfile(db_file):
+            print(f"Could not fine database file {db_file}. Please create the database file")
+
+        for i in range(num_connections):
+            con = duckdb.connect(db_file, read_only=read_only)
+            connections.append(con)
+
+        # set memory limit for the connections
+
+        set_duckdb_memory_limit(connections, memory_limit)
+        
         query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
         pid = os.getpid()
+
         for run in ["cold", "hot"]:
             print(f"{run} run")
+
             if benchmark == 'operators' and query_file.find("join") >= 1:
-                con.sql(DROP_ANSWER_SQL)
-                time.sleep(3)
+                for con in connections:
+                    con.sql(DROP_ANSWER_SQL)
+                    time.sleep(3)
+
+            # Create Threads
+            threads = []
+            for i in range(num_connections):
+                con = connections[i]
+                threads.append(Thread(target=execute_query_on_con, args=(con, query,), name=f'thread with con {i}'))
+
+
             # Create a cursor to execute SQL queries
             start_polling_mem(query_file, "duckdb", benchmark_name, benchmark, run, pid)
-            # Execute the query.
-            if benchmark == 'operators' and query_file.find("join") >= 1:
-                # join operators save the data, so .sql is enough
-                con.sql(query)
-            else:
-                # other benchmarks need .execute so that all data is processed in duckdb
-                con.sql(query).execute()
+
+            # Start threads
+            for t in threads:
+                t.start()
+
+            # stop Threads
+            for t in threads:
+                t.join()
+
             # stop polling memory
             stop_polling_mem(query_file)
+            
             time.sleep(4)
 
         if benchmark == 'operators' and query_file.find("join") >= 1:
-            con.sql(DROP_ANSWER_SQL)
+            for con in connections:
+                con.sql(DROP_ANSWER_SQL)
+                time.sleep(3)
         
     except Exception as e:
         print(f"Error: {e}")
@@ -151,7 +188,7 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
     print(f"done.")
     time.sleep(5)
 
-def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
+def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark, concurrent_connections):
     db_path = f"{HYPER_DATABASE}"
 
     memory_limit_str = f"{memory_limit}g"
@@ -185,10 +222,10 @@ def run_hyper_hot_cold(query_file, memory_limit, benchmark_name, benchmark):
     print(f"done.")
     time.sleep(5)
 
-def profile_query_mem(query_file, systems, memory_limit, benchmark_name, benchmark):
+def profile_query_mem(query_file, systems, memory_limit, benchmark_name, benchmark, concurrent_connections):
     for system in systems:
         print(f"profiling memory for {system}. query {query_file}")
-        run_query(query_file, system, memory_limit, benchmark_name, benchmark)
+        run_query(query_file, system, memory_limit, benchmark_name, benchmark, concurrent_connections)
         print(f"done profiling")
 
 def get_query_file_names(benchmark):
@@ -217,7 +254,7 @@ def parse_args_and_setup(args):
     benchmark_name = "benchmarks/" + args.benchmark_name
     
     if args.system not in ["hyper", "duckdb", "all"]:
-        print("Usage: python3 utils/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
+        print("Usage: python3 duckdb_vs_hyper/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
         exit(1)
 
     benchmarks = args.benchmark.split(",")
@@ -243,11 +280,13 @@ def parse_args_and_setup(args):
         print("please pass benchmark name")
         exit(1)
 
-    return benchmark_name, benchmarks, systems, memory_limit
+    concurrent_connections = args.concurrent_connections
+
+    return benchmark_name, benchmarks, systems, memory_limit, concurrent_connections
 
 
 def main(args):
-    benchmark_name, benchmarks, systems, memory_limit = parse_args_and_setup(args)
+    benchmark_name, benchmarks, systems, memory_limit, concurrent_connections = parse_args_and_setup(args)
 
     overwrite = False
     if os.path.isdir(benchmark_name):
@@ -264,7 +303,7 @@ def main(args):
             os.remove(mem_db)
 
         for query_file in query_file_names:
-            profile_query_mem(query_file, systems, memory_limit, benchmark_name, benchmark)
+            profile_query_mem(query_file, systems, memory_limit, benchmark_name, benchmark, concurrent_connections)
 
         # write the duckdb to csv 
         
@@ -286,6 +325,7 @@ def run_all_queries():
     parser.add_argument('--benchmark', type=str, help='list of benchmarks to run. \'all\', \'tpch\', etc.')
     parser.add_argument('--system', type=str, help='System to benchmark. Either duckdb or hyper')
     parser.add_argument('--memory_limit', type=int, help="memory limit for both systems", default=0)
+    parser.add_argument('--concurrent_connections', type=int, help="number of concurrent connections", default=1)
 
     # Parse the command-line arguments
     args = parser.parse_args()
