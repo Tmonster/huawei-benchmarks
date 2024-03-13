@@ -67,7 +67,7 @@ def start_polling_mem(query_file, system, benchmark_name, benchmark, run, hyper_
             # create db if it does not yet exist.
             if not os.path.exists(mem_db):
                 con = duckdb.connect(mem_db)
-                with open('memory_process/data_schema.sql') as f: schema = f.read()
+                with open('memory_utils/data_schema.sql') as f: schema = f.read()
                 con.sql(f"{schema}")
                 con.close()
 
@@ -120,7 +120,7 @@ def set_duckdb_memory_limit(connections, memory_limit):
             con.sql(f"SET memory_limit={memory_limit_str}")
 
 def execute_query_on_con(con, query):
-    thread_name = str(current_thread().name)
+    thread_name = str(threading.current_thread().name)
     res = con.sql(query).execute()
     print(f"{thread_name} done")
 
@@ -129,12 +129,12 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark, con
 
         # setup connections here.
         connections = []
-        db_file = benchmark == "tmm" ? TMM_DATABSAE : TPCH_DATABASE
+        db_file = TMM_DATABASE if benchmark == "tmm" else TPCH_DATABASE
         read_only = benchmark == "tmm"
-        if not os.file.isfile(db_file):
+        if not os.path.isfile(db_file):
             print(f"Could not fine database file {db_file}. Please create the database file")
 
-        for i in range(num_connections):
+        for i in range(concurrent_connections):
             con = duckdb.connect(db_file, read_only=read_only)
             connections.append(con)
 
@@ -155,9 +155,9 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark, con
 
             # Create Threads
             threads = []
-            for i in range(num_connections):
+            for i in range(concurrent_connections):
                 con = connections[i]
-                threads.append(Thread(target=execute_query_on_con, args=(con, query,), name=f'thread with con {i}'))
+                threads.append(threading.Thread(target=execute_query_on_con, args=(con, query,), name=f'thread with con {i}'))
 
 
             # Create a cursor to execute SQL queries
@@ -184,7 +184,8 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark, con
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        con.close()
+        for con in connections:
+            con.close()
     print(f"done.")
     time.sleep(5)
 
