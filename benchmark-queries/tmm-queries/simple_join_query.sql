@@ -1,0 +1,1 @@
+select * from table_1 t1, table_1 t2 where t1.a = t2.a;
