@@ -23,8 +23,8 @@ for (benchmark_type in c('tpch', 'operators', 'tmm')) {
   
   for (run_type in c('hot', 'cold')) {  
 
-    dbExecute(con, sprintf("create or replace temporary table duckdb_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from duckdb_results where run_type = '%s' and benchmark = '%s' group by all", benchmark_type, run_type));
-    dbExecute(con, sprintf("create or replace temporary table hyper_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from hyper_results where run_type = '%s' and benchmark = '%s' group by all", benchmark_type, run_type));
+    dbExecute(con, sprintf("create or replace temporary table duckdb_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from duckdb_results where run_type = '%s' and benchmark = '%s' group by all", run_type, benchmark_type));
+    dbExecute(con, sprintf("create or replace temporary table hyper_start_times as select min(Time) as start_time, system, run_type, benchmark, benchmark_name, query_name as query from hyper_results where run_type = '%s' and benchmark = '%s' group by all", run_type, benchmark_type));
 
     dbExecute(con, "
       Create or replace temporary table duckdb_results_x_y as select VmRSS/1000000 as MemUsed, Time - duckdb_start_times.start_time as time, results.query_name as query, results.system from duckdb_results results, duckdb_start_times where duckdb_start_times.system = results.system and  duckdb_start_times.query = results.query_name and  duckdb_start_times.run_type = results.run_type and duckdb_start_times.benchmark = results.benchmark and duckdb_start_times.benchmark_name = results.benchmark_name;")
