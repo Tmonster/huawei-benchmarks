@@ -176,7 +176,7 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark, con
                     t.join()
 
                 # stop polling memory
-                stop_polling_mem(query_file)
+                stop_polling_mem(query_file_for_memory_polling)
                 
                 time.sleep(4)
 
@@ -287,7 +287,7 @@ def parse_args_and_setup(args):
 
     connections_list = list(map(lambda x: int(x), args.connections_list))
 
-    return benchmark_name, benchmarks, systems, memory_limit, connections_lists
+    return benchmark_name, benchmarks, systems, memory_limit, connections_list
 
 
 def main(args):

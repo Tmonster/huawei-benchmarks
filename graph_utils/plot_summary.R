@@ -1,8 +1,4 @@
 library(ggplot2)
-library(tidyverse)
-library(dplyr)
-library(stringr)
-library(scales)
 library(duckdb)
 
 con <- dbConnect(duckdb())
