@@ -162,9 +162,8 @@ def run_duckdb_hot_cold(query_file, memory_limit, benchmark_name, benchmark, con
 
 
                 query_file_for_memory_polling = query_file
-                if db_file == TMM_DATABASE:
-                    query_file_for_memory_polling = query_file_for_memory_polling.replace(".sql", "")
-                    query_file_for_memory_polling += f"_{str(concurrent_connections)}_threads"
+                query_file_for_memory_polling = query_file_for_memory_polling.replace(".sql", "")
+                query_file_for_memory_polling += f"_{str(concurrent_connections)}_connections"
                 start_polling_mem(query_file_for_memory_polling, "duckdb", benchmark_name, benchmark, run, pid)
 
                 # Start threads
@@ -312,7 +311,8 @@ def main(args):
 
         # write the duckdb to csv 
         
-        con = duckdb.connect(mem_db)
+        con = duckdb.connect(mem_db, read_only=True)
+        print("copying data to csv")
         csv_result_file_duckdb = f"{benchmark_name}/{benchmark}-duckdb-results"
         csv_result_file_hyper = f"{benchmark_name}/{benchmark}-hyper-results"
         con.sql(f"copy time_info to '{csv_result_file_duckdb}.csv' (FORMAT CSV, HEADER 1)")
