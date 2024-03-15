@@ -311,7 +311,7 @@ def main(args):
 
         # write the duckdb to csv 
         
-        con = duckdb.connect(mem_db, read_only=True)
+        con = duckdb.connect(mem_db)
         print("copying data to csv")
         csv_result_file_duckdb = f"{benchmark_name}/{benchmark}-duckdb-results"
         csv_result_file_hyper = f"{benchmark_name}/{benchmark}-hyper-results"
