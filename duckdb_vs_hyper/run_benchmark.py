@@ -270,7 +270,7 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
             query_file_for_memory_polling = config.benchmark_name + "_continuous_memory_profile.sql"
             query_file_for_memory_polling = query_file_for_memory_polling.replace(".sql", "")
             query_file_for_memory_polling += f"_{str(concurrent_connections).zfill(2)}_connections"
-            # start_polling_mem(query_file_for_memory_polling, "duckdb", config.benchmark_name, benchmark, 'hot', pid)
+            start_polling_mem(query_file_for_memory_polling, "duckdb", config.benchmark_name, benchmark, 'hot', pid)
 
             # Start threads
             for t in threads:
@@ -289,7 +289,7 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
                 t.join()
 
             # stop polling memory
-            # stop_polling_mem(query_file_for_memory_polling)
+            stop_polling_mem(query_file_for_memory_polling)
             mem_db = get_mem_usage_db_file(config.benchmark_name, benchmark)
 
             con = duckdb.connect(mem_db)
