@@ -49,7 +49,7 @@ for (benchmark_type in c('tpch', 'operators', 'tmm')) {
       geom_line() +
       geom_point(data=single_points_duckdb, aes(x=time, y=mem_used, col=system), color="red", shape=4, size=2) +
       geom_point(data=single_points_hyper, aes(x=time, y=mem_used, col=system), color="#00B8E7", shape=4, size=2) +
-      facet_wrap(~query, ncol=5, scales="free_x") +
+      facet_wrap(~query, ncol=1, scales="free_x") +
       ylim(0,NA) + 
       xlab("time [s]") +
       ylab("Memory Used [GB]") +

@@ -6,6 +6,7 @@ import subprocess
 import argparse
 import time
 import duckdb
+import glob
 from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 from duckdb_thread import duckdb_thread
 
@@ -263,13 +264,13 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
             threads = []
             for i in range(concurrent_connections):
                 con = connections[i]
-                threads.append(duckdb_thread(f"thread {i}", con, config.continuous, queries))
+                threads.append(duckdb_thread(f"thread_{i}", con, config.continuous, queries))
 
 
             query_file_for_memory_polling = config.benchmark_name + "_continuous_memory_profile.sql"
             query_file_for_memory_polling = query_file_for_memory_polling.replace(".sql", "")
             query_file_for_memory_polling += f"_{str(concurrent_connections).zfill(2)}_connections"
-            start_polling_mem(query_file_for_memory_polling, "duckdb", config.benchmark_name, benchmark, 'hot', pid)
+            # start_polling_mem(query_file_for_memory_polling, "duckdb", config.benchmark_name, benchmark, 'hot', pid)
 
             # Start threads
             for t in threads:
@@ -288,8 +289,16 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
                 t.join()
 
             # stop polling memory
-            stop_polling_mem(query_file_for_memory_polling)
-            
+            # stop_polling_mem(query_file_for_memory_polling)
+            mem_db = get_mem_usage_db_file(config.benchmark_name, benchmark)
+
+            con = duckdb.connect(mem_db)
+            table_name = f"thread_performance_{concurrent_connections}_threads"
+            con.sql(f"create table {table_name} as (select * from read_parquet('*_performance.parquet', UNION_BY_NAME=TRUE))")
+            for f in glob.glob('_performance.parquet'):
+                os.remove(f)
+            con.close()
+
         except Exception as e:
             print(f"Error: {e}")
         finally:
@@ -348,14 +357,13 @@ def main(config):
                 profile_query_mem(query_file, benchmark, config)
 
         # write the duckdb to csv 
-        
         con = duckdb.connect(mem_db)
         print("copying data to csv")
         csv_result_file_duckdb = f"{config.benchmark_name}/{benchmark}-duckdb-results"
         csv_result_file_hyper = f"{config.benchmark_name}/{benchmark}-hyper-results"
         con.sql(f"copy time_info to '{csv_result_file_duckdb}.csv' (FORMAT CSV, HEADER 1)")
         con.sql(f"copy proc_mem_info to '{csv_result_file_hyper}.csv' (FORMAT CSV, HEADER 1)")
-        os.remove(mem_db)
+        # os.remove(mem_db)
         con.close()
 
 
@@ -405,8 +413,6 @@ class BenchmarkConfig:
             print("please pass benchmark name")
             exit(1)
 
-        # import pdb
-        # pdb.set_trace()
         self.connections_list = list(map(lambda x: int(x), self.args.connections_list))
         self.continuous = self.args.continuous
 
