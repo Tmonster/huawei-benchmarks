@@ -178,7 +178,6 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
 
                 # stop polling memory
                 stop_polling_mem(query_file_for_memory_polling)
-                
                 time.sleep(4)
 
             if benchmark == 'operators' and query_file.find("join") >= 1:
@@ -290,14 +289,17 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
 
             # stop polling memory
             stop_polling_mem(query_file_for_memory_polling)
+            time.sleep(5)
             mem_db = get_mem_usage_db_file(config.benchmark_name, benchmark)
 
             con = duckdb.connect(mem_db)
             table_name = f"thread_performance_{concurrent_connections}_threads"
             con.sql(f"create table {table_name} as (select * from read_parquet('*_performance.parquet', UNION_BY_NAME=TRUE))")
+            con.close()
             for f in glob.glob('_performance.parquet'):
                 os.remove(f)
-            con.close()
+            for f in glob.glob('_performance.csv'):
+                os.remove(f)
 
         except Exception as e:
             print(f"Error: {e}")
