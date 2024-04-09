@@ -31,7 +31,7 @@ if [[ $# -gt 0 ]]
 then
 	echo "Creating data"
 	cd $parent/memory-pressure-benchmarks
-	wget https://s3.console.aws.amazon.com/s3/object/duckdb-blobs?region=us-east-1&bucketType=general&prefix=data/tpch-sf100.db
+	wget https://duckdb-blobs.s3.amazonaws.com/data/tpch-sf100.db --output-document=tpch-sf100.duckdb
 	mv tpch-sf100.db tpch-sf100.duckdb
 	duckdb tpch-sf100.duckdb -c "export database 'tpch_data' (FORMAT CSV, HEADER 1);"
 	python3 hyper/load.py

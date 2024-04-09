@@ -25,8 +25,9 @@ def parse_memory_info(file_path):
                 value = str(value)
                 name = name.replace(":", "")
                 result[name] = value
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         print(f"Error: File '{file_path}' not found.")
+        raise e
     except Exception as e:
         print(f"Error: {e}")
     return result
@@ -42,7 +43,7 @@ def get_csv_line(parsed_mem_info):
             if key in parsed_mem_info:
                 csv_string += f"'{parsed_mem_info[key]}'" + separator
             else:
-                csv_string += "''" + separator
+                csv_string += "NULL" + separator
             separator = ","
         return csv_string
     except Exception as e:
@@ -66,8 +67,11 @@ def poll_meminfo_duckdb(data_db, lock_file, benchmark_name, benchmark, system, r
     benchmark_identifiers = get_query_specific_values(benchmark_name, benchmark, system, run, query)
     while os.path.exists(lock_file):
         process_status_file = get_proc_status_file(pid)
-        parsed_mem_info = parse_memory_info(process_status_file)
-
+        try:
+            parsed_mem_info = parse_memory_info(process_status_file)
+        except FileNotFoundError as e:
+            print(f"seems like process {pid} no longer exists.")
+            break
         now = time.time()
         log = benchmark_identifiers + "," + str(now) + "," + get_csv_line(parsed_mem_info) + "\n"
         con.sql(f"INSERT INTO proc_mem_info VALUES ({log})")
