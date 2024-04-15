@@ -11,7 +11,8 @@ from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 from duckdb_thread import duckdb_thread
 
 
-TPCH_DATABASE = "tpch-sf100.duckdb"
+TPCH_SF100_DATABASE = "tpch-sf100.duckdb"
+TPCH_SF10_DATABASE = "tpch-sf10.duckdb"
 TMM_DATABASE = "tmm.duckdb"
 HYPER_DATABASE = "tpch-sf100.hyper"
 
@@ -121,6 +122,12 @@ def set_duckdb_memory_limit(connections, memory_limit):
             memory_limit_str = f"'{memory_limit}GB'"
             con.sql(f"SET memory_limit={memory_limit_str}")
 
+def set_duckdb_thre(connections, memory_limit):
+    if memory_limit > 0:
+        for con in connections:
+            memory_limit_str = f"'{memory_limit}GB'"
+            con.sql(f"SET memory_limit={memory_limit_str}")
+
 def execute_query_on_con(con, query):
     thread_name = str(threading.current_thread().name)
     res = con.sql(query).execute()
@@ -132,10 +139,22 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
 
             # setup connections here.
             connections = []
-            db_file = TMM_DATABASE if benchmark == "tmm" else TPCH_DATABASE
+            db_file = "__NOT_EXISTS__.duckdb"
+            if benchmark == "tmm":
+                db_file = TMM_DATABASE
+            elif benchmark == "tpch":
+                db_file = TPCH_SF100_DATABASE
+            elif benchmark == "tpch-sf10":
+                db_file = TPCH_SF10_DATABASE
+            else:
+                print("benchmark provided has no database file")
+                exit(1)
+
+            # db_file = TMM_DATABASE if benchmark == "tmm" else TPCH_SF100_DATABASE
             read_only = benchmark == "tmm"
             if not os.path.isfile(db_file):
-                print(f"Could not find database file {db_file}. Please create the database file")
+                print(f"Could not find database file {db_file}. Please create the database file first")
+                exit(1)
 
             for i in range(concurrent_connections):
                 con = duckdb.connect(db_file, read_only=read_only)
@@ -239,7 +258,16 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
             # setup connections here.
             connections = []
             
-            db_file = TMM_DATABASE if benchmark == "tmm" else TPCH_DATABASE
+            db_file = "__NOT_EXISTS__.duckdb"
+            if benchmark == "tmm":
+                db_file = TMM_DATABASE
+            elif benchmark == "tpch":
+                db_file = TPCH_SF100_DATABASE
+            elif benchmark == "tpch-sf10":
+                db_file = TPCH_SF10_DATABASE
+            else:
+                print("benchmark provided has no database file")
+                exit(1)
 
             # continuous benchmark read only is always true
             read_only = True
