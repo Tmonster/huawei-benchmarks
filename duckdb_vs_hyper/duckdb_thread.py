@@ -62,7 +62,10 @@ class duckdb_thread(threading.Thread):
         try:
             if not self.continuous:
                 query = self.queries[0]
+                start = time.time()
                 self.con.sql(query).execute()
+                end = time.time()
+                self.performance.add_execution(i, round(end-start, 2))
             else:
                 num_queries = len(self.queries)
                 i = 0
@@ -75,7 +78,7 @@ class duckdb_thread(threading.Thread):
                     if self._stop_event.is_set():
                         break 
                     i+=1
-                self.performance.dump_performance()
+            self.performance.dump_performance()
         except Exception as e:
             print(f"{self.name} raised an exception")
             print(f"{e}")

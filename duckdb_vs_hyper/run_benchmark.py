@@ -304,7 +304,8 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
                 print(f"starting thread {t.name}")
                 t.start()
 
-            time.sleep(config.continuous_time_limit)
+            if config.continuous:
+                time.sleep(config.continuous_time_limit)
 
             # stop Threads
             for t in threads:
@@ -340,7 +341,12 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
 def profile_query_mem(query_file, benchmark, config): #systems, memory_limit, benchmark_name, benchmark, connections_list):
     for system in config.systems:
         print(f"profiling memory for {system}. query {query_file}")
-        run_query(query_file, system, benchmark, config)
+        if system == 'duckdb':
+            # todo, if testing with Hyper again,
+            # config must be copied and config.systems = ['duckdb']
+            continuous_benchmark_run([query_file], benchmark, config)
+        else:
+            run_query(query_file, system, benchmark, config)
         print(f"done profiling")
 
 def get_query_file_names(benchmark):
