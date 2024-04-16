@@ -65,7 +65,7 @@ class duckdb_thread(threading.Thread):
                 start = time.time()
                 self.con.sql(query).execute()
                 end = time.time()
-                self.performance.add_execution(i, round(end-start, 2))
+                self.performance.add_execution(0, round(end-start, 2))
             else:
                 num_queries = len(self.queries)
                 i = 0
