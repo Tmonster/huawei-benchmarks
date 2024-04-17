@@ -1,12 +1,12 @@
-attach 'benchmarks/april-15-tmm-memory-limit-15/tmm/data.duckdb' as april_16_tmm_memory_limit_15 (READ_ONLY);
-attach 'benchmarks/april-15-tmm-memory-limit-16/tmm/data.duckdb' as april_16_tmm_memory_limit_16 (READ_ONLY);
-attach 'benchmarks/april-15-tmm-memory-limit-17/tmm/data.duckdb' as april_16_tmm_memory_limit_17 (READ_ONLY);
-attach 'benchmarks/april-15-tmm-memory-limit-18/tmm/data.duckdb' as april_16_tmm_memory_limit_18 (READ_ONLY);
-attach 'benchmarks/april-15-tmm-memory-limit-19/tmm/data.duckdb' as april_16_tmm_memory_limit_19 (READ_ONLY);
-attach 'benchmarks/april-15-tmm-memory-limit-20/tmm/data.duckdb' as april_16_tmm_memory_limit_20 (READ_ONLY);
+attach 'benchmarks/april-16-tmm-memory-limit-15/tmm/data.duckdb' as april_16_tmm_memory_limit_15 (READ_ONLY);
+attach 'benchmarks/april-16-tmm-memory-limit-16/tmm/data.duckdb' as april_16_tmm_memory_limit_16 (READ_ONLY);
+attach 'benchmarks/april-16-tmm-memory-limit-17/tmm/data.duckdb' as april_16_tmm_memory_limit_17 (READ_ONLY);
+attach 'benchmarks/april-16-tmm-memory-limit-18/tmm/data.duckdb' as april_16_tmm_memory_limit_18 (READ_ONLY);
+attach 'benchmarks/april-16-tmm-memory-limit-19/tmm/data.duckdb' as april_16_tmm_memory_limit_19 (READ_ONLY);
+attach 'benchmarks/april-16-tmm-memory-limit-20/tmm/data.duckdb' as april_16_tmm_memory_limit_20 (READ_ONLY);
 
 
-create or replace table_all_time_info as 
+create or replace table table_all_time_info as 
     select
         '01_build_table' as query,
         2 as num_connections,

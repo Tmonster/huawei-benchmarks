@@ -64,7 +64,8 @@ from
    all_time_info
 where 
     system = 'duckdb' and 
-    run_type = 'hot' 
+    run_type = 'hot' and
+    num_connections = 1
 group by 
     query_name, 
     system, 
