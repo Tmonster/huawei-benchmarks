@@ -1,6 +1,7 @@
 import duckdb
 import threading
 import time
+import random
 
 
 class QueryPerformance():
@@ -49,10 +50,14 @@ class duckdb_thread(threading.Thread):
         self.con = con
         self.continuous = continuous
         self.queries = queries
+        self.shuffle_query_order()
         self.performance = ThreadPerformance(self.name.strip())
         if len(self.queries) == 0:
             print("you must pass at least 1 query to a duckdb_thread")
             exit(1)
+
+    def shuffle_query_order(self):
+        random.shuffle(self.queries)
 
     def stop(self):
         self._stop_event.set()
