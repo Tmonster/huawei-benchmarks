@@ -59,11 +59,12 @@ class duckdb_thread(threading.Thread):
             exit(1)
 
     def add_shuffled_queries_order(self, queries):
-        shuffled_order = list(range(1, len(queries)))
+        shuffled_order = list(range(1, len(queries)+1))
         random.shuffle(shuffled_order)
         shuffled_queries = []
+        print(f"{self.name} has order {str(shuffled_order)}")
         for i in range(0, len(queries)):
-            shuffled_queries.append(queries[shuffled_order[i]])
+            shuffled_queries.append(queries[shuffled_order[i]-1])
         return shuffled_queries
 
     def stop(self):

@@ -326,7 +326,7 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
             con = duckdb.connect(mem_db)
             table_name = f"thread_performance_{concurrent_connections}_threads"
             if not config.continuous and len(query_file_names) == 1:
-                table_name = f"{query_file_names[0].replace(".sql", "")}_thread_performance_{concurrent_connections}_threads"
+                table_name = f"{query_file_names[0].replace('.sql', '')}_thread_performance_{concurrent_connections}_threads"
             con.sql(f"create table {table_name} as (select * from read_parquet('*_performance.parquet', UNION_BY_NAME=TRUE))")
             con.close()
             for f in glob.glob('*_performance.parquet'):
@@ -342,15 +342,14 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
         print(f"done.")
         time.sleep(5)
 
-def profile_query_mem(query_file, benchmark, config): #systems, memory_limit, benchmark_name, benchmark, connections_list):
+def profile_query_mem(query_file, benchmark, config):
     for system in config.systems:
         print(f"profiling memory for {system}. query {query_file}")
-        if system == 'duckdb':
-            # todo, if testing with Hyper again,
-            # config must be copied and config.systems = ['duckdb']
-            continuous_benchmark_run([query_file], benchmark, config)
-        else:
-            run_query(query_file, system, benchmark, config)
+        # if system == 'duckdb' and config.continuous:
+        #     # todo, if testing with Hyper again,
+        #     # config must be copied and config.systems = ['duckdb']
+        #     continuous_benchmark_run([query_file], benchmark, config)
+        run_query(query_file, system, benchmark, config)
         print(f"done profiling")
 
 def get_query_file_names(benchmark):
