@@ -122,11 +122,12 @@ def set_duckdb_memory_limit(connections, memory_limit):
             memory_limit_str = f"'{memory_limit}GB'"
             con.sql(f"SET memory_limit={memory_limit_str}")
 
-def set_duckdb_thre(connections, memory_limit):
-    if memory_limit > 0:
-        for con in connections:
-            memory_limit_str = f"'{memory_limit}GB'"
-            con.sql(f"SET memory_limit={memory_limit_str}")
+def set_duckdb_allocator_background_threads(connections, allocator_background_threads):
+    config_str = 'false'
+    if allocator_background_threads:
+        config_str = 'true'
+    for con in connections:
+        con.sql(f"SET allocator_background_threads={config_str}")
 
 def execute_query_on_con(con, query):
     thread_name = str(threading.current_thread().name)
@@ -281,6 +282,7 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
             # set memory limit for the connections
 
             set_duckdb_memory_limit(connections, config.memory_limit)
+            set_duckdb_allocator_background_threads(connections, config.allocator_background_threads)
             queries = []
             for query_file in query_file_names:
                 queries.append(get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}"))
@@ -419,6 +421,7 @@ class BenchmarkConfig:
         parser.add_argument('--connections_list', nargs="+", help="number of concurrent connections", default=['1'])
         parser.add_argument('--continuous', type=bool, help='run queries continuously for some time limit', default=False)
         parser.add_argument('--continuous_time_limit', type=int, help='time limit (in seconds) for continuous queries', default=600)
+        parser.add_argument('--allocator_background_threads', type=bool, help='if allocator background threads are on', default=False)
         self.args = parser.parse_args()
 
     def parse_args_and_setup(self):
@@ -453,6 +456,7 @@ class BenchmarkConfig:
 
         self.connections_list = list(map(lambda x: int(x), self.args.connections_list))
         self.continuous = self.args.continuous
+        self.allocator_background_threads = self.args.allocator_background_threads
 
         self.continuous_time_limit = self.args.continuous_time_limit
         if self.continuous_time_limit < 1:
