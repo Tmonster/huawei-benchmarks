@@ -1,0 +1,3 @@
+run with memory_limit=10GB
+
+dedicated instance
