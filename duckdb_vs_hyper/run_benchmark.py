@@ -331,7 +331,7 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
             con = duckdb.connect(mem_db)
             table_name = f"thread_performance_{concurrent_connections}_threads"
             if not config.continuous and len(query_file_names) == 1:
-                table_name = f"{query_file_names[0].replace(".sql", "")}_thread_performance_{concurrent_connections}_threads"
+                table_name = f"{query_file_names[0].replace('.sql', '')}_thread_performance_{concurrent_connections}_threads"
             con.sql(f"create table {table_name} as (select * from read_parquet('*_performance.parquet', UNION_BY_NAME=TRUE))")
             con.close()
             for f in glob.glob('_performance.parquet'):
