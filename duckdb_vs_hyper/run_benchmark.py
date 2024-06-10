@@ -12,9 +12,11 @@ from duckdb_thread import duckdb_thread
 
 
 TPCH_SF100_DATABASE = "tpch-sf100.duckdb"
+TPCDS_SF100_DATABASE = "tpcds-sf100.duckdb"
 TPCH_SF10_DATABASE = "tpch-sf10.duckdb"
 TMM_DATABASE = "tmm.duckdb"
-HYPER_DATABASE = "tpch-sf100.hyper"
+HYPER_TPCH_DATABASE = "tpch-sf100.hyper"
+HYPER_TPCDS_DATABASE = "tpcds-sf100.hyper"
 
 VALID_SYSTEMS = ['duckdb', 'hyper']
 
@@ -146,6 +148,8 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
                 db_file = TPCH_SF100_DATABASE
             elif benchmark == "tpch-sf10":
                 db_file = TPCH_SF10_DATABASE
+            elif benchmark == "tpcds":
+                db_file = TPCDS_SF100_DATABASE
             else:
                 print("benchmark provided has no database file")
                 exit(1)
@@ -213,7 +217,10 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
         time.sleep(5)
 
 def run_hyper_hot_cold(query_file, benchmark, config):
-    db_path = f"{HYPER_DATABASE}"
+    if benchmark == "tpch":
+        db_path = f"{HYPER_TPCH_DATABASE}"
+    elif benchmark == "tpcds":
+        db_path = f"{HYPER_TPCDS_DATABASE}"
 
     memory_limit_str = f"{config.memory_limit}g"
     if config.memory_limit == 0:
@@ -425,12 +432,12 @@ class BenchmarkConfig:
         self.benchmark_name = "benchmarks/" + self.args.benchmark_name
         
         if self.args.system not in ["hyper", "duckdb", "all"]:
-            print("Usage: python3 duckdb_vs_hyper/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join] --system=[duckdb|hyper|all]")
+            print("Usage: python3 duckdb_vs_hyper/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join|tpcds] --system=[duckdb|hyper|all]")
             exit(1)
 
         self.benchmarks = self.args.benchmark.split(",")
         if self.args.benchmark == 'all':
-            benchmarks = ['tpch', 'operators']
+            benchmarks = ['tpch', 'operators', 'tpcds']
 
 
         self.memory_limit = self.args.memory_limit
