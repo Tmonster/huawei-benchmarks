@@ -10,7 +10,7 @@ benchmark_name = args[1]
 # dbExecute(con, sprintf("CREATE TABLE results AS FROM read_csv_auto('benchmarks/%s/*.csv', union_by_name=true)", benchmark_name))
 
 
-for (benchmark_type in c('tpch', 'operators', 'tmm')) {
+for (benchmark_type in c('tpch', 'operators', 'tmm', 'tpcds')) {
 
 	if (!file.exists(sprintf('benchmarks/%s/%s', benchmark_name, benchmark_type))) {
 		print(sprintf("skipping benchmark type %s", benchmark_type))
