@@ -388,8 +388,10 @@ def main(config):
         os.makedirs(config.benchmark_name)
 
     for benchmark in config.benchmarks:
+        if not os.path.isdir(f"{config.benchmark_name}/{benchmark}"):
+            os.makedirs(f"{config.benchmark_name}/{benchmark}")
+
         query_file_names = get_query_file_names(benchmark)
-        
         mem_db = get_mem_usage_db_file(config.benchmark_name, benchmark)
         if overwrite and os.path.exists(mem_db):
             os.remove(mem_db)
@@ -444,14 +446,14 @@ class BenchmarkConfig:
 
         self.systems = self.args.system.split(",")
         if len(self.systems) == 0:
-            print("please pass valid system names. Valid systems are " + VALID_SYSTEMS)
+            print("please pass valid system names. Valid systems are " + str(VALID_SYSTEMS))
 
         if self.systems[0] == "all":
-            systems = ["duckdb", "hyper"]
+            self.systems = ["duckdb", "hyper"]
 
         for system_ in self.systems:
             if system_ not in VALID_SYSTEMS:
-                print("please pass valid system names. Valid systems are " + VALID_SYSTEMS)
+                print("please pass valid system names. Valid systems are " + str(VALID_SYSTEMS))
 
         if self.benchmark_name is None:
             # create benchmark name
