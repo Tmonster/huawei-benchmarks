@@ -188,7 +188,8 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
 
                 query_file_for_memory_polling = query_file
                 query_file_for_memory_polling = query_file_for_memory_polling.replace(".sql", "")
-                query_file_for_memory_polling += f"_{str(concurrent_connections).zfill(2)}_connections"
+                if len(config.connections_list) > 1:
+                    query_file_for_memory_polling += f"_{str(concurrent_connections).zfill(2)}_connections"
                 start_polling_mem(query_file_for_memory_polling, "duckdb", config.benchmark_name, benchmark, run, pid)
 
                 # Start threads
@@ -201,6 +202,11 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
 
                 # stop polling memory
                 stop_polling_mem(query_file_for_memory_polling)
+
+                # hack to (hopefully) clear mmap caches
+                subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"])
+
+
                 time.sleep(4)
 
             if benchmark == 'operators' and query_file.find("join") >= 1:
@@ -247,6 +253,9 @@ def run_hyper_hot_cold(query_file, benchmark, config):
                 start_polling_mem(query_file, "hyper", config.benchmark_name, benchmark, run, hyper_pid)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
+                # hack to (hopefully) clear mmap caches
+                subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"])
+                
                 time.sleep(4)
             if benchmark == 'operators':
                 con.execute_command(DROP_ANSWER_SQL)
@@ -347,10 +356,10 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
         print(f"done.")
         time.sleep(5)
 
-def profile_query_mem(query_file, benchmark, config): #systems, memory_limit, benchmark_name, benchmark, connections_list):
+def profile_query_mem(query_file, benchmark, config):
     for system in config.systems:
         print(f"profiling memory for {system}. query {query_file}")
-        if system == 'duckdb':
+        if system == 'duckdb' and config.continuous:
             # todo, if testing with Hyper again,
             # config must be copied and config.systems = ['duckdb']
             continuous_benchmark_run([query_file], benchmark, config)
