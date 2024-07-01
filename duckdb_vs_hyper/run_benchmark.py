@@ -5,7 +5,6 @@ import threading
 import subprocess
 import argparse
 import time
-import duckdb
 import glob
 from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 from duckdb_thread import duckdb_thread
@@ -264,22 +263,28 @@ def run_hyper_hot_cold(query_file, benchmark, config):
 
 
 def run_postgres_hot_cold(query_file, benchmark, config):
+    con = None
+    cursor = None
+    pid = -1
     if benchmark == "tpch":
         db_name = "tpch"
         con = psycopg2.connect(database=db_name, user="postgres", password="password", host="localhost", port=5432)
         cursor = con.cursor()
+        cursor.execute("select pg_backend_pid();")
+        pid = cursor.fetchmany(1)[0][0]
     elif benchmark == "tpcds":
         db_name = "tpcds"
-        con = psycopg2.connect(database=db_name, user="postgres", password="password", host="localhost", port=5432)
+        con = psycopg2.connect(database="tpcds", user="postgres", password="password", host="localhost", port=5432)
         cursor = con.cursor()
+        cursor.execute("select pg_backend_pid();")
+        pid = cursor.fetchmany(1)[0][0]
 
-   
-    current_process = psutil.Process()
-    children = current_process.children(recursive=True)
-    if len(children) > 1:
-        print("postgres has many child processes. get the frist one")
+    # current_process = psutil.Process()
+    # children = current_process.children(recursive=True)
+    # if len(children) > 1:
+    #     print("postgres has many child processes. get the frist one")
 
-    postgres_pid = children[0].pid
+    postgres_pid = pid
 
     correlated_queries = ""
     # Open the file in read mode and read the contents
@@ -300,6 +305,8 @@ def run_postgres_hot_cold(query_file, benchmark, config):
         stop_polling_mem(query_file)
         
         time.sleep(4)
+
+    con.close()
 
     print(f"done.")
     time.sleep(5)
@@ -478,7 +485,7 @@ class BenchmarkConfig:
     def parse_args_and_setup(self):
         self.benchmark_name = "benchmarks/" + self.args.benchmark_name
         
-        if self.args.system not in ["hyper", "duckdb", "all"]:
+        if self.args.system not in ["hyper", "duckdb", "all", "postgres"]:
             print("Usage: python3 duckdb_vs_hyper/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join|tpcds] --system=[duckdb|hyper|all]")
             exit(1)
 
