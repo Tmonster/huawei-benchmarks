@@ -261,6 +261,47 @@ def run_hyper_hot_cold(query_file, benchmark, config):
     time.sleep(5)
 
 
+def run_postgres_hot_cold(query_file, benchmark, config):
+    if benchmark == "tpch":
+        db_name = "tpch"
+        con = psycopg2.connect(database=db_name, user="postgres", password="password", host="localhost", port=5432)
+        cursor = con.cursor()
+    elif benchmark == "tpcds":
+        db_name = "tpcds"
+        con = psycopg2.connect(database=db_name, user="postgres", password="password", host="localhost", port=5432)
+        cursor = con.cursor()
+
+   
+    current_process = psutil.Process()
+    children = current_process.children(recursive=True)
+    if len(children) > 1:
+        print("postgres has many child processes. get the frist one")
+
+    postgres_pid = children[0].pid
+
+    correlated_queries = ""
+    # Open the file in read mode and read the contents
+    with open('postgres_utils/tpcds_correlated_subqueries.txt', 'r') as file:
+        correlated_queries = file.read()
+    
+    if correlated_queries.find(query_file) >= 0:
+        # if the query file has a correlated subquery, then bounce.
+        return
+
+    query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
+
+    subprocess.call("sudo ./scripts/clear_page_cache.sh", shell=True)
+    for run in ["cold", "hot"]:
+        print(f"{run} run")
+        start_polling_mem(query_file, "postgres", config.benchmark_name, benchmark, run, postgres_pid)
+        res = cursor.execute(query)
+        stop_polling_mem(query_file)
+        
+        time.sleep(4)
+
+    print(f"done.")
+    time.sleep(5)
+
 def continuous_benchmark_run(query_file_names, benchmark, config):
     if benchmark == 'operators' and query_file.find("join") >= 1:
         print("Cannot run continous benchmark on operators queries")
@@ -357,16 +398,7 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
 def profile_query_mem(query_file, benchmark, config):
     for system in config.systems:
         print(f"profiling memory for {system}. query {query_file}")
-<<<<<<< Updated upstream
-        if system == 'duckdb' and config.continuous:
-            # todo, if testing with Hyper again,
-            # config must be copied and config.systems = ['duckdb']
-            continuous_benchmark_run([query_file], benchmark, config)
-        else:
-            run_query(query_file, system, benchmark, config)
-=======
         run_query(query_file, system, benchmark, config)
->>>>>>> Stashed changes
         print(f"done profiling")
 
 def get_query_file_names(benchmark):
