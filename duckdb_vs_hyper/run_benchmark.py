@@ -171,6 +171,8 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
             query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
             pid = os.getpid()
 
+            # hack to (hopefully) clear mmap caches
+            subprocess.call("sudo ./scripts/clear_page_cache.sh", shell=True)
             for run in ["cold", "hot"]:
                 print(f"{run} run")
 
@@ -202,9 +204,6 @@ def run_duckdb_hot_cold(query_file, benchmark, config):
 
                 # stop polling memory
                 stop_polling_mem(query_file_for_memory_polling)
-
-                # hack to (hopefully) clear mmap caches
-                subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"])
 
 
                 time.sleep(4)
@@ -244,7 +243,8 @@ def run_hyper_hot_cold(query_file, benchmark, config):
                 exit(0)
 
             hyper_pid = children[0].pid
-                
+
+            subprocess.call("sudo ./scripts/clear_page_cache.sh", shell=True)
             for run in ["cold", "hot"]:
                 print(f"{run} run")
                 if benchmark == 'operators':
@@ -253,8 +253,6 @@ def run_hyper_hot_cold(query_file, benchmark, config):
                 start_polling_mem(query_file, "hyper", config.benchmark_name, benchmark, run, hyper_pid)
                 res = con.execute_command(query)
                 stop_polling_mem(query_file)
-                # hack to (hopefully) clear mmap caches
-                subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"])
                 
                 time.sleep(4)
             if benchmark == 'operators':
@@ -359,12 +357,16 @@ def continuous_benchmark_run(query_file_names, benchmark, config):
 def profile_query_mem(query_file, benchmark, config):
     for system in config.systems:
         print(f"profiling memory for {system}. query {query_file}")
+<<<<<<< Updated upstream
         if system == 'duckdb' and config.continuous:
             # todo, if testing with Hyper again,
             # config must be copied and config.systems = ['duckdb']
             continuous_benchmark_run([query_file], benchmark, config)
         else:
             run_query(query_file, system, benchmark, config)
+=======
+        run_query(query_file, system, benchmark, config)
+>>>>>>> Stashed changes
         print(f"done profiling")
 
 def get_query_file_names(benchmark):
