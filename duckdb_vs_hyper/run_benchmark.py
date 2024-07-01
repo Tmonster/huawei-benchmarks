@@ -18,7 +18,7 @@ TMM_DATABASE = "tmm.duckdb"
 HYPER_TPCH_DATABASE = "tpch-sf100.hyper"
 HYPER_TPCDS_DATABASE = "tpcds-sf100.hyper"
 
-VALID_SYSTEMS = ['duckdb', 'hyper']
+VALID_SYSTEMS = ['duckdb', 'hyper', 'postgres']
 
 DROP_ANSWER_SQL = "Drop table if exists ans;"
 
@@ -114,6 +114,8 @@ def run_query(query_file, system, benchmark, config):
         run_duckdb_hot_cold(query_file, benchmark, config)
     elif system == "hyper":
         run_hyper_hot_cold(query_file, benchmark, config)
+    elif system == "postgres":
+        run_postgres_hot_cold(query_file, benchmark, config)
     else:
         print("System must be hyper or duckdb")
         exit(1)
@@ -492,7 +494,7 @@ class BenchmarkConfig:
             print("please pass valid system names. Valid systems are " + str(VALID_SYSTEMS))
 
         if self.systems[0] == "all":
-            self.systems = ["duckdb", "hyper"]
+            self.systems = ["duckdb", "hyper", "postgres"]
 
         for system_ in self.systems:
             if system_ not in VALID_SYSTEMS:
@@ -512,8 +514,8 @@ class BenchmarkConfig:
             exit(1)
 
         ### extra checks
-        if self.continuous and (len(self.systems) > 1 and self.systems[0] == 'hyper'):
-            print("cannot continuously run hyper queries.. yet")
+        if self.continuous and (len(self.systems) > 1 and (self.systems[0] == 'hyper'  or self.systems[0] == 'postgres'):
+            print("cannot continuously run hyper queries.")
             exit(1)
 
 
