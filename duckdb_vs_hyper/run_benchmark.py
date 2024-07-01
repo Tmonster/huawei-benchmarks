@@ -521,7 +521,7 @@ class BenchmarkConfig:
             exit(1)
 
         ### extra checks
-        if self.continuous and (len(self.systems) > 1 and (self.systems[0] == 'hyper'  or self.systems[0] == 'postgres'):
+        if self.continuous and (len(self.systems) > 1 and (self.systems[0] == 'hyper'  or self.systems[0] == 'postgres')):
             print("cannot continuously run hyper queries.")
             exit(1)
 
