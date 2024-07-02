@@ -29,14 +29,14 @@ def execute_multi_query(query, con):
 def copy_tpch(con):
     print("copying tpch data from csv")
     con.execute("""START TRANSACTION;""").close()
-    con.execute(f"""Copy customer FROM '/mount/memory-pressure-benchmarks/tpch_data/customer.csv' WITH (FORMAT CSV, HEADER 1);""")
-    con.execute(f"""Copy lineitem FROM '/mount/memory-pressure-benchmarks/tpch_data/lineitem.csv' WITH (FORMAT CSV, HEADER 1);""")
-    con.execute(f"""Copy nation FROM '/mount/memory-pressure-benchmarks/tpch_data/nation.csv' WITH (FORMAT CSV, HEADER 1);""")
-    con.execute(f"""Copy orders FROM '/mount/memory-pressure-benchmarks/tpch_data/orders.csv' WITH (FORMAT CSV, HEADER 1);""")
-    con.execute(f"""Copy part FROM '/mount/memory-pressure-benchmarks/tpch_data/part.csv' WITH (FORMAT CSV, HEADER 1);""")
-    con.execute(f"""Copy partsupp FROM '/mount/memory-pressure-benchmarks/tpch_data/partsupp.csv' WITH (FORMAT CSV, HEADER 1);""")
-    con.execute(f"""Copy region FROM '/mount/memory-pressure-benchmarks/tpch_data/region.csv' WITH (FORMAT CSV, HEADER 1);""")
-    con.execute(f"""Copy supplier FROM '/mount/memory-pressure-benchmarks/tpch_data/supplier.csv' WITH (FORMAT CSV, HEADER 1);""")
+    con.execute(f"""Copy customer FROM '/mount/memory-pressure-benchmarks/tpch_data/customer.csv' DELIMITER ',' CSV HEADER);""")
+    con.execute(f"""Copy lineitem FROM '/mount/memory-pressure-benchmarks/tpch_data/lineitem.csv' DELIMITER ',' CSV HEADER);""")
+    con.execute(f"""Copy nation FROM '/mount/memory-pressure-benchmarks/tpch_data/nation.csv' DELIMITER ',' CSV HEADER);""")
+    con.execute(f"""Copy orders FROM '/mount/memory-pressure-benchmarks/tpch_data/orders.csv' DELIMITER ',' CSV HEADER);""")
+    con.execute(f"""Copy part FROM '/mount/memory-pressure-benchmarks/tpch_data/part.csv' DELIMITER ',' CSV HEADER);""")
+    con.execute(f"""Copy partsupp FROM '/mount/memory-pressure-benchmarks/tpch_data/partsupp.csv' DELIMITER ',' CSV HEADER);""")
+    con.execute(f"""Copy region FROM '/mount/memory-pressure-benchmarks/tpch_data/region.csv' DELIMITER ',' CSV HEADER);""")
+    con.execute(f"""Copy supplier FROM '/mount/memory-pressure-benchmarks/tpch_data/supplier.csv' DELIMITER ',' CSV HEADER);""")
     con.execute("""COMMIT;""")
 
 def copy_tpcds(con):

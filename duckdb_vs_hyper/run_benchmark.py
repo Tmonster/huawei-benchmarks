@@ -6,6 +6,7 @@ import subprocess
 import argparse
 import time
 import duckdb
+import psycopg2
 import glob
 from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
 from duckdb_thread import duckdb_thread
@@ -285,12 +286,12 @@ def run_postgres_hot_cold(query_file, benchmark, config):
         correlated_queries = file.read()
     
     if correlated_queries.find(query_file) >= 0:
+        print("skipping query. correlated subquery detected")
         # if the query file has a correlated subquery, then bounce.
         return
 
     query = get_query_from_file(f"benchmark-queries/{benchmark}-queries/{query_file}")
 
-    subprocess.call("sudo ./scripts/clear_page_cache.sh", shell=True)
     for run in ["cold", "hot"]:
         print(f"{run} run")
         start_polling_mem(query_file, "postgres", config.benchmark_name, benchmark, run, postgres_pid)
