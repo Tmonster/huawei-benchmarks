@@ -91,7 +91,6 @@ def main(benchmark):
         copy_tpcds(con)
 
     print(f'Loading {benchmark} done.')
-    con.execute_query("""COMMIT;""").close()
 
 
 if __name__ == '__main__':

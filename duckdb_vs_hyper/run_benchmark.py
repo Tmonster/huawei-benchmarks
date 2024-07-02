@@ -5,7 +5,6 @@ import threading
 import subprocess
 import argparse
 import time
-import duckdb
 import psycopg2
 import glob
 from tableauhyperapi import HyperProcess, Telemetry, Connection, CreateMode
@@ -19,7 +18,7 @@ TMM_DATABASE = "tmm.duckdb"
 HYPER_TPCH_DATABASE = "tpch-sf100.hyper"
 HYPER_TPCDS_DATABASE = "tpcds-sf100.hyper"
 
-VALID_SYSTEMS = ['duckdb', 'hyper']
+VALID_SYSTEMS = ['duckdb', 'hyper', 'postgres']
 
 DROP_ANSWER_SQL = "Drop table if exists ans;"
 
@@ -115,6 +114,8 @@ def run_query(query_file, system, benchmark, config):
         run_duckdb_hot_cold(query_file, benchmark, config)
     elif system == "hyper":
         run_hyper_hot_cold(query_file, benchmark, config)
+    elif system == "postgres":
+        run_postgres_hot_cold(query_file, benchmark, config)
     else:
         print("System must be hyper or duckdb")
         exit(1)
@@ -263,22 +264,28 @@ def run_hyper_hot_cold(query_file, benchmark, config):
 
 
 def run_postgres_hot_cold(query_file, benchmark, config):
+    con = None
+    cursor = None
+    pid = -1
     if benchmark == "tpch":
         db_name = "tpch"
         con = psycopg2.connect(database=db_name, user="postgres", password="password", host="localhost", port=5432)
         cursor = con.cursor()
+        cursor.execute("select pg_backend_pid();")
+        pid = cursor.fetchmany(1)[0][0]
     elif benchmark == "tpcds":
         db_name = "tpcds"
-        con = psycopg2.connect(database=db_name, user="postgres", password="password", host="localhost", port=5432)
+        con = psycopg2.connect(database="tpcds", user="postgres", password="password", host="localhost", port=5432)
         cursor = con.cursor()
+        cursor.execute("select pg_backend_pid();")
+        pid = cursor.fetchmany(1)[0][0]
 
-   
-    current_process = psutil.Process()
-    children = current_process.children(recursive=True)
-    if len(children) > 1:
-        print("postgres has many child processes. get the frist one")
+    # current_process = psutil.Process()
+    # children = current_process.children(recursive=True)
+    # if len(children) > 1:
+    #     print("postgres has many child processes. get the frist one")
 
-    postgres_pid = children[0].pid
+    postgres_pid = pid
 
     correlated_queries = ""
     # Open the file in read mode and read the contents
@@ -299,6 +306,8 @@ def run_postgres_hot_cold(query_file, benchmark, config):
         stop_polling_mem(query_file)
         
         time.sleep(4)
+
+    con.close()
 
     print(f"done.")
     time.sleep(5)
@@ -477,7 +486,7 @@ class BenchmarkConfig:
     def parse_args_and_setup(self):
         self.benchmark_name = "benchmarks/" + self.args.benchmark_name
         
-        if self.args.system not in ["hyper", "duckdb", "all"]:
+        if self.args.system not in ["hyper", "duckdb", "all", "postgres"]:
             print("Usage: python3 duckdb_vs_hyper/run_benchmark.py --benchmark_name=[name] --benchmark=[tpch|aggr-thin|aggr-wide|join|tpcds] --system=[duckdb|hyper|all]")
             exit(1)
 
@@ -493,7 +502,7 @@ class BenchmarkConfig:
             print("please pass valid system names. Valid systems are " + str(VALID_SYSTEMS))
 
         if self.systems[0] == "all":
-            self.systems = ["duckdb", "hyper"]
+            self.systems = ["duckdb", "hyper", "postgres"]
 
         for system_ in self.systems:
             if system_ not in VALID_SYSTEMS:
@@ -513,8 +522,8 @@ class BenchmarkConfig:
             exit(1)
 
         ### extra checks
-        if self.continuous and (len(self.systems) > 1 and self.systems[0] == 'hyper'):
-            print("cannot continuously run hyper queries.. yet")
+        if self.continuous and (len(self.systems) > 1 and (self.systems[0] == 'hyper'  or self.systems[0] == 'postgres')):
+            print("cannot continuously run hyper queries.")
             exit(1)
 
 
