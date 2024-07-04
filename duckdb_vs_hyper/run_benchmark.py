@@ -289,7 +289,7 @@ def run_postgres_hot_cold(query_file, benchmark, config):
 
     correlated_queries = ""
     # Open the file in read mode and read the contents
-    with open('postgres_utils/tpcds_correlated_subqueries.txt', 'r') as file:
+    with open(f'postgres_utils/{benchmark}_correlated_subqueries.txt', 'r') as file:
         correlated_queries = file.read()
     
     if correlated_queries.find(query_file) >= 0:
