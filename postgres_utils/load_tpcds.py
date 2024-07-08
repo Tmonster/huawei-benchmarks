@@ -2,7 +2,6 @@ import os
 import sys
 import psycopg2
 
-
 def get_query_from_file(file_name):
     try:
         # Open the file in read mode and read the contents
@@ -28,16 +27,14 @@ def execute_multi_query(query, con):
 
 def copy_tpch(con):
     print("copying tpch data from csv")
-    con.execute("""START TRANSACTION;""").close()
-    con.execute(f"""Copy customer FROM '/mount/memory-pressure-benchmarks/tpch_data/customer.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute(f"""Copy lineitem FROM '/mount/memory-pressure-benchmarks/tpch_data/lineitem.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute(f"""Copy nation FROM '/mount/memory-pressure-benchmarks/tpch_data/nation.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute(f"""Copy orders FROM '/mount/memory-pressure-benchmarks/tpch_data/orders.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute(f"""Copy part FROM '/mount/memory-pressure-benchmarks/tpch_data/part.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute(f"""Copy partsupp FROM '/mount/memory-pressure-benchmarks/tpch_data/partsupp.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute(f"""Copy region FROM '/mount/memory-pressure-benchmarks/tpch_data/region.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute(f"""Copy supplier FROM '/mount/memory-pressure-benchmarks/tpch_data/supplier.csv' DELIMITER ',' CSV HEADER);""")
-    con.execute("""COMMIT;""")
+    con.execute(f"""Copy customer FROM '/mount/memory-pressure-benchmarks/tpch_data/customer.csv' DELIMITER ',' CSV HEADER;""")
+    con.execute(f"""Copy lineitem FROM '/mount/memory-pressure-benchmarks/tpch_data/lineitem.csv' DELIMITER ',' CSV HEADER;""")
+    con.execute(f"""Copy nation FROM '/mount/memory-pressure-benchmarks/tpch_data/nation.csv' DELIMITER ',' CSV HEADER;""")
+    con.execute(f"""Copy orders FROM '/mount/memory-pressure-benchmarks/tpch_data/orders.csv' DELIMITER ',' CSV HEADER;""")
+    con.execute(f"""Copy part FROM '/mount/memory-pressure-benchmarks/tpch_data/part.csv' DELIMITER ',' CSV HEADER;""")
+    con.execute(f"""Copy partsupp FROM '/mount/memory-pressure-benchmarks/tpch_data/partsupp.csv' DELIMITER ',' CSV HEADER;""")
+    con.execute(f"""Copy region FROM '/mount/memory-pressure-benchmarks/tpch_data/region.csv' DELIMITER ',' CSV HEADER;""")
+    con.execute(f"""Copy supplier FROM '/mount/memory-pressure-benchmarks/tpch_data/supplier.csv' DELIMITER ',' CSV HEADER;""")
 
 def copy_tpcds(con):
     print("copying tpcds data from csv")
@@ -79,7 +76,7 @@ def main(benchmark):
         schema = get_query_from_file(f"tpch/{benchmark}-schema.sql")
         cursor.execute(schema)
         con.commit()
-        copy_tpch(con)
+        copy_tpch(cursor)
     if benchmark == "tpcds":
         db_name = "tpcds"
         con = psycopg2.connect(database=db_name, user="postgres", password="password", host="localhost", port=5432)
