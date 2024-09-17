@@ -19,9 +19,14 @@ for (benchmark_type in c('tpch', 'operators', 'tmm', 'tpcds')) {
 
   con <- dbConnect(duckdb(sprintf("benchmarks/%s/%s/data.duckdb", benchmark_name, benchmark_type)))
   dbExecute(con, "attach 'benchmarks/postgres-results-tpcds/tpcds/data.duckdb' as postgres_results_db")
+  dbExecute(con, "attach 'benchmarks/sept17-hyper/tpch/data.duckdb' as hyper_tpch_results")
+  dbExecute(con, "attach 'benchmarks/sept17-hyper-tpcds/tpcds/data.duckdb' as hyper_tpcds_results")
+  
   dbExecute(con, "create or replace view postgres_results_db.postgres_results as select * from postgres_results_db.proc_mem_info where system='postgres'")
+  dbExecute(con, "create or replace view hyper_results as (select * from hyper_tpch_results.proc_mem_info where system='hyper' union select * from hyper_tpcds_results.proc_mem_info)")
+
   dbExecute(con, "create or replace view duckdb_results as select * from proc_mem_info where system='duckdb'")
-  dbExecute(con, "create or replace view hyper_results as select * from proc_mem_info where system='hyper'")
+  
   
   for (run_type in c('hot', 'cold')) {  
 
